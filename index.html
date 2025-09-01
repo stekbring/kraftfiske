@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <title>Olles Fishing Company</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    .box { max-width: 450px; margin: auto; padding: 20px; border: 1px solid #ccc; border-radius: 10px; }
+    label { display: block; margin-top: 10px; }
+    input, select { width: 100%; padding: 8px; margin-top: 5px; }
+    button { margin-top: 15px; padding: 10px; width: 100%; background: green; color: white; border: none; border-radius: 5px; }
+    .quick { display: flex; gap: 10px; margin-top: 5px; }
+    .quick button { flex: 1; background: #444; }
+    .info { margin-top: 10px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h2>Olles Fishing Company</h2>
+    <p><b>Tillgängliga kräftor:</b> <span id="available">...</span></p>
+    <p><b>Pris per tjog:</b> Kokta: <span id="priceKokta">...</span> kr, Levande: <span id="priceLevande">...</span> kr</p>
+
+    <form id="bookingForm">
+      <label>Namn</label>
+      <input type="text" id="name" required>
+
+      <label>Telefonnummer</label>
+      <input type="text" id="phone">
+
+      <label>Email</label>
+      <input type="email" id="email">
+
+      <label>Antal kräftor</label>
+      <input type="number" id="amount" min="20" step="20" required placeholder="t.ex. 40 för 2 tjog">
+      <div class="quick">
+        <button type="button" onclick="setTjog(1)">1 tjog</button>
+        <button type="button" onclick="setTjog(2)">2 tjog</button>
+        <button type="button" onclick="setTjog(3)">3 tjog</button>
+      </div>
+
+      <label>Typ</label>
+      <select id="type">
+        <option value="kokta">Kokta</option>
+        <option value="levande">Levande</option>
+      </select>
+
+      <p class="info">Totalsumma: <span id="total">0</span> kr</p>
+
+      <button type="submit">Boka</button>
+    </form>
+
+    <p id="result"></p>
+  </div>
+
+<script>
+  const scriptURL = "https://script.google.com/macros/s/AKfycbwQj2hOufssXthHOqLi9ztq-de8ILAYLyIafty9_6w5suJrcv3rHuDZ8jGJesK37HmfUw/exec"; // byt till din Apps Script URL
+  let prices = { kokta: 0, levande: 0 };
+
+  async function loadMeta() {
+    const availableEl = document.getElementById("available");
+    availableEl.textContent = "Laddar...";
+    try {
+      const res = await fetch(scriptURL);
+      const data = await res.json();
+      availableEl.textContent = data.available;
+
+      document.getElementById("priceKokta").textContent = data.pricePerTjog.kokta;
+      document.getElementById("priceLevande").textContent = data.pricePerTjog.levande;
+      prices = data.pricePerTjog;
+
+      document.getElementById("amount").max = data.available || 0;
+    } catch (err) {
+      availableEl.textContent = "Fel vid hämtning!";
+      console.error(err);
+    }
+  }
+
+  function setTjog(n) {
+    document.getElementById("amount").value = n * 20;
+    updateTotal();
+  }
+
+  function updateTotal() {
+    const antal = parseInt(document.getElementById("amount").value, 10) || 0;
+    const typ = document.getElementById("type").value;
+    const total = Math.ceil(antal / 20) * (prices[typ] || 0);
+    document.getElementById("total").textContent = total;
+  }
+
+  document.getElementById("amount").addEventListener("input", updateTotal);
+  document.getElementById("type").addEventListener("change", updateTotal);
+
+  document.getElementById("bookingForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const booking = {
+      name:  document.getElementById("name").value.trim(),
+      phone: document.getElementById("phone").value.trim(),
+      email: document.getElementById("email").value.trim(),
+      amount: parseInt(document.getElementById("amount").value, 10),
+      type: document.getElementById("type").value
+    };
+    const resultEl = document.getElementById("result");
+    resultEl.textContent = "Skickar bokning...";
+    try {
+      const res = await fetch(scriptURL, {
+        method: "POST",
+        body: JSON.stringify(booking)
+      });
+      const result = await res.json();
+      if (result.success) {
+        resultEl.textContent = "Bokning klar! Pris: " + result.pris + " kr";
+        await loadMeta();
+        updateTotal();
+      } else if (result.error === "NOT_ENOUGH_STOCK") {
+        resultEl.textContent = `Det finns bara ${result.available} kräftor kvar.`;
+        await loadMeta();
+      } else {
+        resultEl.textContent = "Något gick fel. Försök igen.";
+      }
+    } catch (err) {
+      resultEl.textContent = "Fel vid bokning!";
+      console.error(err);
+    }
+  });
+
+  loadMeta();
+</script>
+</body>
+</html>
