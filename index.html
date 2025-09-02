@@ -2,10 +2,11 @@
 <html lang="sv">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Olles Fishing Company</title>
   <link rel="icon" type="image/png" href="loggasimpelt.ico">
   
-  <!-- Byt font här genom att byta ut länken -->
+  <!-- Font -->
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 
   <style>
@@ -26,6 +27,11 @@
     header img {
       height: 110px;
       margin-right: 20px;
+    }
+
+    header h1 {
+      font-size: 24px;
+      margin: 0;
     }
 
     nav {
@@ -82,26 +88,129 @@
       font-size: 16px;
     }
     .quick { display: flex; gap: 10px; margin-top: 5px; }
-    .quick button { flex: 1; background: #444; }
+    .quick button { flex: 1; background: #444; color: white; border: none; border-radius: 5px; cursor: pointer; }
     .info { margin-top: 10px; font-weight: bold; }
     #result { margin-top: 15px; font-weight: bold; }
+
+    /* Popup-stil */
+    .popup {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .popup-content {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+    }
+    .popup-content h3 { margin-top: 0; }
+    .popup button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      background: #680c0c;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    /* Mobilanpassning */
+    @media (max-width: 600px) {
+      header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+
+      header img {
+        height: 250px;
+        margin: 0 0 0px 0;
+      }
+
+      header h1 {
+        font-size: 20px;
+        margin-bottom: 10px;
+      }
+
+      nav {
+        margin: 10px 0 0 0;
+      }
+
+      nav a {
+        display: inline-block;
+        margin: 5px;
+        font-size: 16px;
+      }
+
+      .content {
+        max-width: 500px;
+        margin: 20px auto;
+        padding: 20px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      }
+
+
+      form input, form select, form button {
+        font-size: 16px;
+        padding: 12px;
+      }
+
+      .quick {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+      }
+
+      .quick button {
+        font-size: 14px;
+        padding: 10px;
+      }
+
+      footer {
+        font-size: 14px;
+        padding: 15px;
+      }
+
+      .footer-bg {
+        height: 60px;
+      }
+
+      .popup-content {
+        width: 90%;
+        height: auto;
+        max-height: 80%;
+        overflow-y: auto;
+      }
+    }
   </style>
 </head>
 <body>
   <header>
     <img src="loggafull.png" alt="Olles Fishing Company">
     <h1>Olles Fishing Company</h1>
+    <!-- Ändra onclick på länkarna -->
     <nav>
-      <a onclick="showTab('boka')" class="active">Boka</a>
-      <a onclick="showTab('om')">Om oss</a>
-      <a onclick="showTab('info')">Info kräftor</a>
+      <a onclick="showTab(event, 'köp')" class="active">Köp</a>
+      <a onclick="showTab(event, 'om')">Om oss</a>
+      <a onclick="showTab(event, 'info')">Info kräftor</a>
     </nav>
+
   </header>
 
   <main class="content">
     <!-- Boka-fliken -->
     <section id="boka" class="tab-content active">
-      <h2>Boka kräftor</h2>
+      <h2>Köp kräftor</h2>
       <p><b>Tillgängliga kräftor:</b> <span id="available">...</span></p>
       <p><b>Pris per tjog:</b> Kokta: <span id="priceKokta">...</span> kr, Levande: <span id="priceLevande">...</span> kr</p>
 
@@ -113,10 +222,10 @@
         <input type="text" id="phone">
 
         <label>Email</label>
-        <input type="email" id="email">
+        <input type="email" id="email" required placeholder="Valfritt">
 
         <label>Antal kräftor</label>
-        <input type="number" id="amount" min="20" step="20" required placeholder="t.ex. 40 för 2 tjog">
+        <input type="number" id="amount" min="5" step="5">
         <div class="quick">
           <button type="button" onclick="setTjog(1)">1 tjog</button>
           <button type="button" onclick="setTjog(2)">2 tjog</button>
@@ -158,8 +267,17 @@
   </footer>
   <div class="footer-bg"></div>
 
+  <!-- Popup -->
+  <div id="popup" class="popup">
+    <div class="popup-content">
+      <h3>Bokning klar!</h3>
+      <p id="popupText"></p>
+      <button onclick="closePopup()">Stäng</button>
+    </div>
+  </div>
+
   <script>
-    const scriptURL = "https://script.google.com/macros/s/AKfycbwQj2hOufssXthHOqLi9ztq-de8ILAYLyIafty9_6w5suJrcv3rHuDZ8jGJesK37HmfUw/exec"; // byt till din Apps Script URL
+    const scriptURL = "https://script.google.com/macros/s/AKfycbwQj2hOufssXthHOqLi9ztq-de8ILAYLyIafty9_6w5suJrcv3rHuDZ8jGJesK37HmfUw/exec"; // byt till din Apps Script URL 
     let prices = { kokta: 0, levande: 0 };
 
     async function loadMeta() {
@@ -212,7 +330,12 @@
         });
         const result = await res.json();
         if (result.success) {
-          resultEl.textContent = "Bokning klar! Pris: " + result.pris + " kr";
+          // Visa popup
+          document.getElementById("popupText").textContent = 
+            `${booking.name} har bokat ${booking.amount} ${booking.type} kräftor för totalt ${result.pris} kr.`;
+          document.getElementById("popup").style.display = "flex";
+
+          resultEl.textContent = "";
           await loadMeta();
           updateTotal();
         } else if (result.error === "NOT_ENOUGH_STOCK") {
@@ -227,13 +350,18 @@
       }
     });
 
+    function closePopup() {
+      document.getElementById("popup").style.display = "none";
+    }
+
     // Växla flikar
-    function showTab(id) {
+    function showTab(e, id) {
       document.querySelectorAll(".tab-content").forEach(sec => sec.classList.remove("active"));
       document.querySelectorAll("nav a").forEach(link => link.classList.remove("active"));
       document.getElementById(id).classList.add("active");
-      event.target.classList.add("active");
+      e.target.classList.add("active");
     }
+
 
     // Sätt året i footern
     document.getElementById("year").textContent = new Date().getFullYear();
