@@ -124,7 +124,7 @@
     }
     .quick { display: flex; gap: 10px; margin-top: 5px; }
     .quick button { flex: 1; background: #444; color: white; border: none; border-radius: 5px; cursor: pointer; }
-    .info { margin-top: 10px; font-weight: bold; }
+    .info { margin-top: 25px; font-weight: bold; }
     #result { margin-top: 15px; font-weight: bold; }
 
     .popup {
@@ -148,6 +148,14 @@
     form label input[type="checkbox"] {
       width: auto; margin-right: 8px;
     }
+
+    .info-label {
+      font-size: 13px;
+      color: #555;
+      margin-left: 10px;  /* lite luft mellan kg och labeln */
+      font-weight: normal;
+    }
+
 
     @media (max-width: 600px) {
       header { flex-direction: column; align-items: center; text-align: center; }
@@ -199,7 +207,11 @@
   <main class="content">
     <section id="boka" class="tab-content active">
       <h2>Köp kräftor</h2>
-      <p><b>Tillgängliga kräftor:</b> <span id="available">...</span> kg  (ca 20st kräftor)</p>
+      <p>
+        <b>Tillgängliga kräftor:</b> 
+        <span id="available">...</span> kg
+        <span class="info-label">(1 kg är ca 20 kräftor)</span>
+      </p>
       <p><b>Pris per kg:</b> Kokta: <span id="priceKokta">...</span> kr, Levande: <span id="priceLevande">...</span> kr</p>
 
       <form id="bookingForm">
