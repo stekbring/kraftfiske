@@ -14,10 +14,9 @@
       margin: 0;
       font-family: 'Roboto', sans-serif;
       background: #891212;
-
-      display: flex;           /* 👈 aktivera flex */
-      flex-direction: column;  /* stapla header, main, footer lodrätt */
-      min-height: 100vh;       /* hela höjden på skärmen */
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
     }
 
     header {
@@ -28,34 +27,17 @@
       padding: 10px 20px;
     }
 
-    header img {
-      height: 110px;
-      margin-right: 20px;
-    }
+    header img { height: 110px; margin-right: 20px; }
+    header h1 { font-size: 24px; margin: 0; }
 
-    header h1 {
-      font-size: 24px;
-      margin: 0;
-    }
-
-    nav {
-      margin-left: auto;
-    }
-
+    nav { margin-left: auto; }
     nav a {
-      color: white;
-      text-decoration: none;
-      margin: 0 10px;
-      font-weight: bold;
-      cursor: pointer;
+      color: white; text-decoration: none; margin: 0 10px; font-weight: bold; cursor: pointer;
     }
-
-    nav a.active {
-      text-decoration: underline;
-    }
+    nav a.active { text-decoration: underline; }
 
     main.content {
-      flex: 1; /* 👈 tar all plats mellan header och footer */
+      flex: 1;
       width: 85%;
       max-width: 1200px;
       margin: 20px auto;
@@ -64,6 +46,50 @@
       border-radius: 8px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
+    .kg-control {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 10px;
+    }
+
+    .kg-control button {
+      background: #891212;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 20px;
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+    }
+
+    .kg-display {
+      display: flex;
+      align-items: baseline;   /* siffran och kg blir snyggt i linje */
+      gap: 4px;
+      min-width: 80px;         /* gör så det alltid är centrerat mellan knapparna */
+      justify-content: center; 
+      margin-top: 15px;
+    }
+
+    .kg-display span {
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .newsletter-label {
+      font-size: 15px;   /* gör texten lite mindre */
+      color: #444;       /* valfritt: lite mjukare färg */
+    }
+
+    .newsletter-label input {
+        vertical-align: middle;
+        transform: scale(1.1); /* kan förstora själva rutan lite om du vill */
+        margin-right: 6px;
+        margin-top: 3px;
+      }
 
     footer {
       text-align: center;
@@ -73,16 +99,11 @@
       margin-top: 40px;
     }
 
-    .footer-bg {
-      background: #680c0c;
-      height: 200px;
-    }
+    .footer-bg { background: #680c0c; height: 200px; }
 
-    /* Dölj alla sektioner utom den aktiva */
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
-    /* Formulärstil */
     form label { display: block; margin-top: 10px; }
     form input, form select {
       width: 100%; padding: 8px; margin-top: 5px;
@@ -98,121 +119,61 @@
     .info { margin-top: 10px; font-weight: bold; }
     #result { margin-top: 15px; font-weight: bold; }
 
-    /* Popup-stil */
     .popup {
-      display: none;
-      position: fixed;
-      top: 0; left: 0;
+      display: none; position: fixed; top: 0; left: 0;
       width: 100%; height: 100%;
       background: rgba(0,0,0,0.6);
-      justify-content: center;
-      align-items: center;
+      justify-content: center; align-items: center;
       z-index: 1000;
     }
     .popup-content {
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
-      max-width: 400px;
-      width: 90%;
-      text-align: center;
+      background: white; padding: 20px; border-radius: 8px;
+      max-width: 400px; width: 90%; text-align: center;
     }
     .popup-content h3 { margin-top: 0; }
     .popup button {
-      margin-top: 15px;
-      padding: 10px 20px;
-      background: #680c0c;
-      color: white;
-      border: none;
-      border-radius: 5px;
+      margin-top: 15px; padding: 10px 20px;
+      background: #680c0c; color: white; border: none; border-radius: 5px;
       cursor: pointer;
     }
     
     form label input[type="checkbox"] {
-      width: auto;
-      margin-right: 8px;
+      width: auto; margin-right: 8px;
     }
 
-
-    /* Mobilanpassning */
     @media (max-width: 600px) {
-      header {
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-      }
-
-      header img {
-        height: 250px;
-        margin: 0 0 0px 0;
-      }
-
-      header h1 {
-        font-size: 30px;
-        margin-bottom: 40px;
-      }
-
-      nav {
-        margin: 10px 0 0 0;
-      }
-
-      nav a {
-        display: inline-block;
-        margin: 5px;
-        font-size: 16px;
-      }
+      header { flex-direction: column; align-items: center; text-align: center; }
+      header img { height: 250px; margin: 0; }
+      header h1 { font-size: 30px; margin-bottom: 40px; }
+      nav { margin: 10px 0 0 0; }
+      nav a { display: inline-block; margin: 5px; font-size: 16px; }
 
       .content {
-      width: 85%;
-      max-width: 1200px;
-      margin: 20px auto;
-      padding: 20px;
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-
-      min-height: calc(100vh - 200px); /* 👈 se förklaring nedan */
-    }
-
-
-      form input,
-      form select,
-      form button {
-        width: 100%;
-        padding: 8px;
-        margin-top: 5px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        box-sizing: border-box;   /* 👈 detta gör så de hamnar snyggt i mitten */
+        width: 85%; max-width: 1200px; margin: 20px auto;
+        padding: 20px; background: white; border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        min-height: calc(100vh - 200px);
       }
 
-
-      .quick {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 8px;
+      .newsletter-label {
+        font-size: 13px;   /* gör texten lite mindre */
+        color: #444;       /* valfritt: lite mjukare färg */
       }
 
-      .quick button {
-        font-size: 14px;
-        padding: 10px;
+      .newsletter-label input {
+        vertical-align: middle;
+        transform: scale(1.1); /* kan förstora själva rutan lite om du vill */
+        margin-right: 6px;
+        margin-top: 3px;
       }
 
-      footer {
-        font-size: 14px;
-        padding: 15px;
-      }
+      .quick { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+      .quick button { font-size: 14px; padding: 10px; }
 
-      .footer-bg {
-        height: 100px;
-      }
+      footer { font-size: 14px; padding: 15px; }
+      .footer-bg { height: 100px; }
 
-      .popup-content {
-        width: 90%;
-        height: auto;
-        max-height: 80%;
-        overflow-y: auto;
-      }
+      .popup-content { width: 90%; max-height: 80%; overflow-y: auto; }
     }
   </style>
 </head>
@@ -220,21 +181,18 @@
   <header>
     <img src="loggafull.png" alt="Olles Fishing Company">
     <h1>Olles Fishing Company</h1>
-    <!-- Ändra onclick på länkarna -->
     <nav>
       <a onclick="showTab(event, 'boka')" class="active">Köp</a>
       <a onclick="showTab(event, 'om')">Om oss</a>
       <a onclick="showTab(event, 'info')">Info kräftor</a>
     </nav>
-
   </header>
 
   <main class="content">
-    <!-- Boka-fliken -->
     <section id="boka" class="tab-content active">
       <h2>Köp kräftor</h2>
-      <p><b>Tillgängliga kräftor:</b> <span id="available">...</span></p>
-      <p><b>Pris per tjog:</b> Kokta: <span id="priceKokta">...</span> kr, Levande: <span id="priceLevande">...</span> kr</p>
+      <p><b>Tillgängliga kräftor:</b> <span id="available">...</span> kg</p>
+      <p><b>Pris per kg:</b> Kokta: <span id="priceKokta">...</span> kr, Levande: <span id="priceLevande">...</span> kr</p>
 
       <form id="bookingForm">
         <label>Namn</label>
@@ -246,21 +204,23 @@
         <label>Email</label>
         <input type="email" id="email" placeholder="Valfritt">
 
-        <label>
+        <label class="newsletter-label">
           <input type="checkbox" id="newsletter">
           Jag vill få ett mail när nya kräftor finns tillgängliga
         </label>
 
-        <label>Antal kräftor</label>
-        <input type="number" id="amount" min="5" step="5">
-        <div class="quick">
-          <button type="button" onclick="setTjog(1)">1 tjog</button>
-          <button type="button" onclick="setTjog(2)">2 tjog</button>
-          <button type="button" onclick="setTjog(3)">3 tjog</button>
-          <button type="button" onclick="setTjog(4)">4 tjog</button>
-          <button type="button" onclick="setTjog(5)">5 tjog</button>
-          <button type="button" onclick="setTjog(6)">6 tjog</button>
+
+        <div class="kg-control">
+          <button type="button" onclick="changeKg(-0.5)">−</button>
+          <div class="kg-display">
+            <span id="kgDisplay">0.0</span>
+            <span>kg</span>
+          </div>
+          <button type="button" onclick="changeKg(0.5)">+</button>
         </div>
+        <input type="hidden" id="amount" value="0">
+
+
 
         <label>Typ</label>
         <select id="type">
@@ -269,20 +229,17 @@
         </select>
 
         <p class="info">Totalsumma: <span id="total">0</span> kr</p>
-
         <button type="submit">Boka</button>
       </form>
 
       <p id="result"></p>
     </section>
 
-    <!-- Om oss-fliken -->
     <section id="om" class="tab-content">
       <h2>Om oss</h2>
       <p>Vi på Olles Fishing Company har fiskat kräftor i generationer...</p>
     </section>
 
-    <!-- Info-fliken -->
     <section id="info" class="tab-content">
       <h2>Info om kräftor</h2>
       <p>Här kan du läsa mer om våra kräftor, skötselråd och tips inför kräftskivan.</p>
@@ -294,7 +251,6 @@
   </footer>
   <div class="footer-bg"></div>
 
-  <!-- Popup -->
   <div id="popup" class="popup">
     <div class="popup-content">
       <h3>Bokning klar!</h3>
@@ -304,7 +260,7 @@
   </div>
 
   <script>
-    const scriptURL = "https://script.google.com/macros/s/AKfycbwQj2hOufssXthHOqLi9ztq-de8ILAYLyIafty9_6w5suJrcv3rHuDZ8jGJesK37HmfUw/exec"; // byt till din Apps Script URL 
+    const scriptURL = "https://script.google.com/macros/s/AKfycbziLCvlOhWxh66cy7hgaVly8tBa4vrUjPo1YkkfXHdCzJJzzUjvDLLK3CM7lVlvH25F/exec"; 
     let prices = { kokta: 0, levande: 0 };
 
     async function loadMeta() {
@@ -314,9 +270,9 @@
         const res = await fetch(scriptURL);
         const data = await res.json();
         availableEl.textContent = data.available;
-        document.getElementById("priceKokta").textContent = data.pricePerTjog.kokta;
-        document.getElementById("priceLevande").textContent = data.pricePerTjog.levande;
-        prices = data.pricePerTjog;
+        document.getElementById("priceKokta").textContent = data.pricePerKg.kokta;
+        document.getElementById("priceLevande").textContent = data.pricePerKg.levande;
+        prices = data.pricePerKg;
         document.getElementById("amount").max = data.available || 0;
       } catch (err) {
         availableEl.textContent = "Fel vid hämtning!";
@@ -324,17 +280,23 @@
       }
     }
 
-    function setTjog(n) {
-      document.getElementById("amount").value = n * 20;
+    function changeKg(step) {
+      let current = parseFloat(document.getElementById("amount").value) || 0;
+      current = Math.max(0, current + step); // aldrig under 0
+      current = Math.round(current * 2) / 2; // rundar till närmaste 0,5
+      document.getElementById("amount").value = current;
+      document.getElementById("kgDisplay").textContent = current.toFixed(1);
       updateTotal();
     }
 
+
     function updateTotal() {
-      const antal = parseInt(document.getElementById("amount").value, 10) || 0;
+      const antal = parseFloat(document.getElementById("amount").value) || 0;
       const typ = document.getElementById("type").value;
-      const total = Math.ceil(antal / 20) * (prices[typ] || 0);
+      const total = antal * (prices[typ] || 0);
       document.getElementById("total").textContent = total;
     }
+
 
     document.getElementById("amount").addEventListener("input", updateTotal);
     document.getElementById("type").addEventListener("change", updateTotal);
@@ -342,13 +304,13 @@
     document.getElementById("bookingForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const booking = {
-      name:  document.getElementById("name").value.trim(),
-      phone: document.getElementById("phone").value.trim(),
-      email: document.getElementById("email").value.trim(),
-      newsletter: document.getElementById("newsletter").checked,
-      amount: parseInt(document.getElementById("amount").value, 10),
-      type: document.getElementById("type").value
-    };
+        name: document.getElementById("name").value.trim(),
+        phone: document.getElementById("phone").value.trim(),
+        email: document.getElementById("email").value.trim(),
+        newsletter: document.getElementById("newsletter").checked,
+        amount: parseFloat(document.getElementById("amount").value, 10),
+        type: document.getElementById("type").value
+      };
 
       const resultEl = document.getElementById("result");
       resultEl.textContent = "Skickar bokning...";
@@ -359,16 +321,17 @@
         });
         const result = await res.json();
         if (result.success) {
-          // Visa popup
-          document.getElementById("popupText").textContent = 
-            `${booking.name} har bokat ${booking.amount} ${booking.type} kräftor för totalt ${result.pris} kr.`;
+          document.getElementById("popupText").innerHTML = 
+          `Du har bokat ${booking.amount} kg ${booking.type} kräftor för totalt ${result.pris} kr.<br><br>
+          Bokningsbekräftelse skickas via SMS.`;
+
           document.getElementById("popup").style.display = "flex";
 
           resultEl.textContent = "";
           await loadMeta();
           updateTotal();
         } else if (result.error === "NOT_ENOUGH_STOCK") {
-          resultEl.textContent = `Det finns bara ${result.available} kräftor kvar.`;
+          resultEl.textContent = `Det finns bara ${result.available} kg kräftor kvar.`;
           await loadMeta();
         } else {
           resultEl.textContent = "Något gick fel. Försök igen.";
@@ -383,7 +346,6 @@
       document.getElementById("popup").style.display = "none";
     }
 
-    // Växla flikar
     function showTab(e, id) {
       document.querySelectorAll(".tab-content").forEach(sec => sec.classList.remove("active"));
       document.querySelectorAll("nav a").forEach(link => link.classList.remove("active"));
@@ -391,12 +353,20 @@
       e.target.classList.add("active");
     }
 
-
-    // Sätt året i footern
     document.getElementById("year").textContent = new Date().getFullYear();
-
-    // Ladda data direkt
     loadMeta();
+
+    document.getElementById("newsletter").addEventListener("change", function() {
+      const emailField = document.getElementById("email");
+      if (this.checked) {
+        emailField.required = true;
+        emailField.placeholder = "Obligatorisk om du vill ha nyhetsbrev";
+      } else {
+        emailField.required = false;
+        emailField.placeholder = "Valfritt";
+      }
+    });
+
   </script>
 </body>
 </html>
