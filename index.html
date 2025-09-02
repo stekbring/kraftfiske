@@ -14,6 +14,10 @@
       margin: 0;
       font-family: 'Roboto', sans-serif;
       background: #891212;
+
+      display: flex;           /* 👈 aktivera flex */
+      flex-direction: column;  /* stapla header, main, footer lodrätt */
+      min-height: 100vh;       /* hela höjden på skärmen */
     }
 
     header {
@@ -50,8 +54,10 @@
       text-decoration: underline;
     }
 
-    .content {
-      max-width: 800px;
+    main.content {
+      flex: 1; /* 👈 tar all plats mellan header och footer */
+      width: 85%;
+      max-width: 1200px;
       margin: 20px auto;
       padding: 20px;
       background: white;
@@ -142,8 +148,8 @@
       }
 
       header h1 {
-        font-size: 20px;
-        margin-bottom: 10px;
+        font-size: 30px;
+        margin-bottom: 40px;
       }
 
       nav {
