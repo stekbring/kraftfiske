@@ -191,7 +191,7 @@
   <main class="content">
     <section id="boka" class="tab-content active">
       <h2>Köp kräftor</h2>
-      <p><b>Tillgängliga kräftor:</b> <span id="available">...</span> kg</p>
+      <p><b>Tillgängliga kräftor:</b> <span id="available">...</span> kg  (ca 20st kräftor)</p>
       <p><b>Pris per kg:</b> Kokta: <span id="priceKokta">...</span> kr, Levande: <span id="priceLevande">...</span> kr</p>
 
       <form id="bookingForm">
@@ -265,7 +265,7 @@
 
     async function loadMeta() {
       const availableEl = document.getElementById("available");
-      availableEl.textContent = "Laddar...";
+      availableEl.textContent = "...";
       try {
         const res = await fetch(scriptURL);
         const data = await res.json();
