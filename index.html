@@ -3,164 +3,243 @@
 <head>
   <meta charset="UTF-8">
   <title>Olles Fishing Company</title>
-  <link rel="icon" type="image/icon" href="loggasimpelt.ico">
+  <link rel="icon" type="image/png" href="loggasimpelt.ico">
+  
+  <!-- Byt font här genom att byta ut länken -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    .box { max-width: 450px; margin: auto; padding: 20px; border: 1px solid #ccc; border-radius: 10px; }
-    label { display: block; margin-top: 10px; }
-    input, select { width: 100%; padding: 8px; margin-top: 5px; }
-    button { margin-top: 15px; padding: 10px; width: 100%; background: green; color: white; border: none; border-radius: 5px; }
+    body {
+      margin: 0;
+      font-family: 'Roboto', sans-serif;
+      background: #f9f9f9;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      background: #891212;
+      color: white;
+      padding: 10px 20px;
+    }
+
+    header img {
+      height: 110px;
+      margin-right: 20px;
+    }
+
+    nav {
+      margin-left: auto;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      margin: 0 10px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    nav a.active {
+      text-decoration: underline;
+    }
+
+    .content {
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      background: #680c0c;
+      color: white;
+      margin-top: 40px;
+    }
+
+    .footer-bg {
+      background: #680c0c;
+      height: 100px;
+    }
+
+    /* Dölj alla sektioner utom den aktiva */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* Formulärstil */
+    form label { display: block; margin-top: 10px; }
+    form input, form select {
+      width: 100%; padding: 8px; margin-top: 5px;
+      border: 1px solid #ccc; border-radius: 5px;
+    }
+    form button {
+      margin-top: 15px; padding: 10px; width: 100%;
+      background: #680c0c; color: white; border: none; border-radius: 5px;
+      font-size: 16px;
+    }
     .quick { display: flex; gap: 10px; margin-top: 5px; }
     .quick button { flex: 1; background: #444; }
     .info { margin-top: 10px; font-weight: bold; }
-
-    /* NYTT - Popup stil */
-    .modal {
-      display: none; 
-      position: fixed; 
-      z-index: 1000; 
-      left: 0; top: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.5); 
-      justify-content: center; align-items: center;
-    }
-    .modal-content {
-      background: white; padding: 20px; border-radius: 10px; max-width: 300px; text-align: center;
-    }
-    .modal-content h3 { margin-top: 0; }
-    .close-btn {
-      margin-top: 15px; padding: 8px 15px; border: none; background: green; color: white; border-radius: 5px; cursor: pointer;
-    }
+    #result { margin-top: 15px; font-weight: bold; }
   </style>
 </head>
 <body>
-  <div class="box">
-    <h2>Olles Fishing Company</h2>
-    <p><b>Tillgängliga kräftor:</b> <span id="available">...</span></p>
-    <p><b>Pris per tjog:</b> Kokta: <span id="priceKokta">...</span> kr, Levande: <span id="priceLevande">...</span> kr</p>
+  <header>
+    <img src="loggafull.png" alt="Olles Fishing Company">
+    <h1>Olles Fishing Company</h1>
+    <nav>
+      <a onclick="showTab('boka')" class="active">Boka</a>
+      <a onclick="showTab('om')">Om oss</a>
+      <a onclick="showTab('info')">Info kräftor</a>
+    </nav>
+  </header>
 
-    <form id="bookingForm">
-      <label>Namn</label>
-      <input type="text" id="name" required>
+  <main class="content">
+    <!-- Boka-fliken -->
+    <section id="boka" class="tab-content active">
+      <h2>Boka kräftor</h2>
+      <p><b>Tillgängliga kräftor:</b> <span id="available">...</span></p>
+      <p><b>Pris per tjog:</b> Kokta: <span id="priceKokta">...</span> kr, Levande: <span id="priceLevande">...</span> kr</p>
 
-      <label>Telefonnummer</label>
-      <input type="text" id="phone">
+      <form id="bookingForm">
+        <label>Namn</label>
+        <input type="text" id="name" required>
 
-      <label>Email</label>
-      <input type="email" id="email">
+        <label>Telefonnummer</label>
+        <input type="text" id="phone">
 
-      <label>Antal kräftor</label>
-      <input type="number" id="amount" min="20" step="20" required placeholder="t.ex. 40 för 2 tjog">
-      <div class="quick">
-        <button type="button" onclick="setTjog(1)">1 tjog</button>
-        <button type="button" onclick="setTjog(2)">2 tjog</button>
-        <button type="button" onclick="setTjog(3)">3 tjog</button>
-      </div>
+        <label>Email</label>
+        <input type="email" id="email">
 
-      <label>Typ</label>
-      <select id="type">
-        <option value="kokta">Kokta</option>
-        <option value="levande">Levande</option>
-      </select>
+        <label>Antal kräftor</label>
+        <input type="number" id="amount" min="20" step="20" required placeholder="t.ex. 40 för 2 tjog">
+        <div class="quick">
+          <button type="button" onclick="setTjog(1)">1 tjog</button>
+          <button type="button" onclick="setTjog(2)">2 tjog</button>
+          <button type="button" onclick="setTjog(3)">3 tjog</button>
+          <button type="button" onclick="setTjog(4)">4 tjog</button>
+          <button type="button" onclick="setTjog(5)">5 tjog</button>
+          <button type="button" onclick="setTjog(6)">6 tjog</button>
+        </div>
 
-      <p class="info">Totalsumma: <span id="total">0</span> kr</p>
+        <label>Typ</label>
+        <select id="type">
+          <option value="kokta">Kokta</option>
+          <option value="levande">Levande</option>
+        </select>
 
-      <button type="submit">Boka</button>
-    </form>
+        <p class="info">Totalsumma: <span id="total">0</span> kr</p>
 
-    <p id="result"></p>
-  </div>
+        <button type="submit">Boka</button>
+      </form>
 
-  <!-- NYTT - Popup -->
-  <div id="successModal" class="modal">
-    <div class="modal-content">
-      <h3>Bokning klar!</h3>
-      <p id="modalMessage"></p>
-      <button class="close-btn" onclick="closeModal()">Stäng</button>
-    </div>
-  </div>
+      <p id="result"></p>
+    </section>
 
-<script>
-  const scriptURL = "https://script.google.com/macros/s/AKfycbwQj2hOufssXthHOqLi9ztq-de8ILAYLyIafty9_6w5suJrcv3rHuDZ8jGJesK37HmfUw/exec"; // byt till din Apps Script URL
-  let prices = { kokta: 0, levande: 0 };
+    <!-- Om oss-fliken -->
+    <section id="om" class="tab-content">
+      <h2>Om oss</h2>
+      <p>Vi på Olles Fishing Company har fiskat kräftor i generationer...</p>
+    </section>
 
-  async function loadMeta() {
-    const availableEl = document.getElementById("available");
-    availableEl.textContent = "Laddar...";
-    try {
-      const res = await fetch(scriptURL);
-      const data = await res.json();
-      availableEl.textContent = data.available;
+    <!-- Info-fliken -->
+    <section id="info" class="tab-content">
+      <h2>Info om kräftor</h2>
+      <p>Här kan du läsa mer om våra kräftor, skötselråd och tips inför kräftskivan.</p>
+    </section>
+  </main>
 
-      document.getElementById("priceKokta").textContent = data.pricePerTjog.kokta;
-      document.getElementById("priceLevande").textContent = data.pricePerTjog.levande;
-      prices = data.pricePerTjog;
+  <footer>
+    &copy; <span id="year"></span> Olles Fishing Company
+  </footer>
+  <div class="footer-bg"></div>
 
-      document.getElementById("amount").max = data.available || 0;
-    } catch (err) {
-      availableEl.textContent = "Fel vid hämtning!";
-      console.error(err);
-    }
-  }
+  <script>
+    const scriptURL = "https://script.google.com/macros/s/AKfycbwQj2hOufssXthHOqLi9ztq-de8ILAYLyIafty9_6w5suJrcv3rHuDZ8jGJesK37HmfUw/exec"; // byt till din Apps Script URL
+    let prices = { kokta: 0, levande: 0 };
 
-  function setTjog(n) {
-    document.getElementById("amount").value = n * 20;
-    updateTotal();
-  }
-
-  function updateTotal() {
-    const antal = parseInt(document.getElementById("amount").value, 10) || 0;
-    const typ = document.getElementById("type").value;
-    const total = Math.ceil(antal / 20) * (prices[typ] || 0);
-    document.getElementById("total").textContent = total;
-  }
-
-  document.getElementById("amount").addEventListener("input", updateTotal);
-  document.getElementById("type").addEventListener("change", updateTotal);
-
-  document.getElementById("bookingForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const booking = {
-      name:  document.getElementById("name").value.trim(),
-      phone: document.getElementById("phone").value.trim(),
-      email: document.getElementById("email").value.trim(),
-      amount: parseInt(document.getElementById("amount").value, 10),
-      type: document.getElementById("type").value
-    };
-    const resultEl = document.getElementById("result");
-    resultEl.textContent = "Skickar bokning...";
-    try {
-      const res = await fetch(scriptURL, {
-        method: "POST",
-        body: JSON.stringify(booking)
-      });
-      const result = await res.json();
-      if (result.success) {
-        resultEl.textContent = ""; // döljer gamla texten
-        document.getElementById("modalMessage").textContent = "Din beställning är registrerad. Pris: " + result.pris + " kr";
-        openModal();
-        await loadMeta();
-        updateTotal();
-      } else if (result.error === "NOT_ENOUGH_STOCK") {
-        resultEl.textContent = `Det finns bara ${result.available} kräftor kvar.`;
-        await loadMeta();
-      } else {
-        resultEl.textContent = "Något gick fel. Försök igen.";
+    async function loadMeta() {
+      const availableEl = document.getElementById("available");
+      availableEl.textContent = "Laddar...";
+      try {
+        const res = await fetch(scriptURL);
+        const data = await res.json();
+        availableEl.textContent = data.available;
+        document.getElementById("priceKokta").textContent = data.pricePerTjog.kokta;
+        document.getElementById("priceLevande").textContent = data.pricePerTjog.levande;
+        prices = data.pricePerTjog;
+        document.getElementById("amount").max = data.available || 0;
+      } catch (err) {
+        availableEl.textContent = "Fel vid hämtning!";
+        console.error(err);
       }
-    } catch (err) {
-      resultEl.textContent = "Fel vid bokning!";
-      console.error(err);
     }
-  });
 
-  // NYTT - modal funktioner
-  function openModal() {
-    document.getElementById("successModal").style.display = "flex";
-  }
-  function closeModal() {
-    document.getElementById("successModal").style.display = "none";
-  }
+    function setTjog(n) {
+      document.getElementById("amount").value = n * 20;
+      updateTotal();
+    }
 
-  loadMeta();
-</script>
+    function updateTotal() {
+      const antal = parseInt(document.getElementById("amount").value, 10) || 0;
+      const typ = document.getElementById("type").value;
+      const total = Math.ceil(antal / 20) * (prices[typ] || 0);
+      document.getElementById("total").textContent = total;
+    }
+
+    document.getElementById("amount").addEventListener("input", updateTotal);
+    document.getElementById("type").addEventListener("change", updateTotal);
+
+    document.getElementById("bookingForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const booking = {
+        name:  document.getElementById("name").value.trim(),
+        phone: document.getElementById("phone").value.trim(),
+        email: document.getElementById("email").value.trim(),
+        amount: parseInt(document.getElementById("amount").value, 10),
+        type: document.getElementById("type").value
+      };
+      const resultEl = document.getElementById("result");
+      resultEl.textContent = "Skickar bokning...";
+      try {
+        const res = await fetch(scriptURL, {
+          method: "POST",
+          body: JSON.stringify(booking)
+        });
+        const result = await res.json();
+        if (result.success) {
+          resultEl.textContent = "Bokning klar! Pris: " + result.pris + " kr";
+          await loadMeta();
+          updateTotal();
+        } else if (result.error === "NOT_ENOUGH_STOCK") {
+          resultEl.textContent = `Det finns bara ${result.available} kräftor kvar.`;
+          await loadMeta();
+        } else {
+          resultEl.textContent = "Något gick fel. Försök igen.";
+        }
+      } catch (err) {
+        resultEl.textContent = "Fel vid bokning!";
+        console.error(err);
+      }
+    });
+
+    // Växla flikar
+    function showTab(id) {
+      document.querySelectorAll(".tab-content").forEach(sec => sec.classList.remove("active"));
+      document.querySelectorAll("nav a").forEach(link => link.classList.remove("active"));
+      document.getElementById(id).classList.add("active");
+      event.target.classList.add("active");
+    }
+
+    // Sätt året i footern
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    // Ladda data direkt
+    loadMeta();
+  </script>
 </body>
 </html>
