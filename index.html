@@ -13,13 +13,13 @@
     body {
       margin: 0;
       font-family: 'Roboto', sans-serif;
-      background: #f9f9f9;
+      background: #891212;
     }
 
     header {
       display: flex;
       align-items: center;
-      background: #891212;
+      background: #680c0c;
       color: white;
       padding: 10px 20px;
     }
@@ -84,7 +84,7 @@
     }
     form button {
       margin-top: 15px; padding: 10px; width: 100%;
-      background: #680c0c; color: white; border: none; border-radius: 5px;
+      background: #891212; color: white; border: none; border-radius: 5px;
       font-size: 16px;
     }
     .quick { display: flex; gap: 10px; margin-top: 5px; }
@@ -121,6 +121,12 @@
       border-radius: 5px;
       cursor: pointer;
     }
+    
+    form label input[type="checkbox"] {
+      width: auto;
+      margin-right: 8px;
+    }
+
 
     /* Mobilanpassning */
     @media (max-width: 600px) {
@@ -151,7 +157,7 @@
       }
 
       .content {
-        max-width: 500px;
+        width: 85%;
         margin: 20px auto;
         padding: 20px;
         background: white;
@@ -160,10 +166,17 @@
       }
 
 
-      form input, form select, form button {
-        font-size: 16px;
-        padding: 12px;
+      form input,
+      form select,
+      form button {
+        width: 100%;
+        padding: 8px;
+        margin-top: 5px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        box-sizing: border-box;   /* 👈 detta gör så de hamnar snyggt i mitten */
       }
+
 
       .quick {
         display: grid;
@@ -222,7 +235,12 @@
         <input type="text" id="phone">
 
         <label>Email</label>
-        <input type="email" id="email" required placeholder="Valfritt">
+        <input type="email" id="email" placeholder="Valfritt">
+
+        <label>
+          <input type="checkbox" id="newsletter">
+          Jag vill få ett mail när nya kräftor finns tillgängliga
+        </label>
 
         <label>Antal kräftor</label>
         <input type="number" id="amount" min="5" step="5">
@@ -315,12 +333,14 @@
     document.getElementById("bookingForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const booking = {
-        name:  document.getElementById("name").value.trim(),
-        phone: document.getElementById("phone").value.trim(),
-        email: document.getElementById("email").value.trim(),
-        amount: parseInt(document.getElementById("amount").value, 10),
-        type: document.getElementById("type").value
-      };
+      name:  document.getElementById("name").value.trim(),
+      phone: document.getElementById("phone").value.trim(),
+      email: document.getElementById("email").value.trim(),
+      newsletter: document.getElementById("newsletter").checked,
+      amount: parseInt(document.getElementById("amount").value, 10),
+      type: document.getElementById("type").value
+    };
+
       const resultEl = document.getElementById("result");
       resultEl.textContent = "Skickar bokning...";
       try {
