@@ -227,10 +227,10 @@
       <h2>Köp kräftor</h2>
       <p>
         <b>Tillgängliga kräftor:</b> 
-        <span id="available">...</span> kg
+        <span id="available">....</span> kg
         <span class="info-label">(1 kg är ca 20 kräftor)</span>
       </p>
-      <p><b>Pris per kg:</b> Kokta: <span id="priceKokta">...</span> kr, Levande: <span id="priceLevande">...</span> kr</p>
+      <p><b>Pris per kg:</b> Kokta: <span id="priceKokta">....</span> kr, Levande: <span id="priceLevande">....</span> kr</p>
 
       <form id="bookingForm">
         <label>Namn</label>
@@ -303,7 +303,7 @@
 
     async function loadMeta() {
       const availableEl = document.getElementById("available");
-      availableEl.textContent = "...";
+      availableEl.textContent = "....";
       try {
         const res = await fetch(scriptURL);
         const data = await res.json();
