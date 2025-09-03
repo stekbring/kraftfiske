@@ -6,9 +6,6 @@
   <title>Olles Fishing Company</title>
   <link rel="icon" type="image/png" href="loggasimpelvit.ico">
   
-  <!-- Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-
   <style>
     body {
       margin: 0;
@@ -28,7 +25,7 @@
     }
 
     header img { 
-      height: 90px; 
+      height: 70px; 
       margin-right: 20px; 
     }
     header h1 { 
@@ -99,7 +96,7 @@
 
     footer {
       text-align: center;
-      padding: 20px;
+      padding: 60px 20px 20px;
       background: #680c0c;
       color: white;
       margin-top: 40px;
@@ -189,10 +186,25 @@
         margin-top: 3px;
       }
 
+      main.content {
+        flex: 1;
+        width: 85%;
+        max-width: 800px;
+        margin: 20px auto;
+        padding: 20px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      }
+
       .quick { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
       .quick button { font-size: 14px; padding: 10px; }
 
-      footer { font-size: 14px; padding: 15px; }
+      footer { 
+        font-size: 14px; 
+        padding: 15px; 
+        padding: 50px 20px 20px;
+      }
       .footer-bg { height: 100px; }
 
       .popup-content { width: 90%; max-height: 80%; overflow-y: auto; }
