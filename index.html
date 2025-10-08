@@ -74,9 +74,9 @@
 
     .kg-display {
       display: flex;
-      align-items: baseline;   /* siffran och kg blir snyggt i linje */
+      align-items: baseline;
       gap: 4px;
-      min-width: 80px;         /* gör så det alltid är centrerat mellan knapparna */
+      min-width: 80px;
       justify-content: center; 
       margin-top: 15px;
     }
@@ -87,13 +87,13 @@
     }
 
     .newsletter-label {
-      font-size: 15px;   /* gör texten lite mindre */
-      color: #444;       /* valfritt: lite mjukare färg */
+      font-size: 15px;
+      color: #444;
     }
 
     .newsletter-label input {
         vertical-align: middle;
-        transform: scale(1.1); /* kan förstora själva rutan lite om du vill */
+        transform: scale(1.1);
         margin-right: 6px;
         margin-top: 3px;
       }
@@ -111,9 +111,7 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
-    form label { 
-      display: block; margin-top: 10px; 
-    }
+    form label { display: block; margin-top: 10px; }
 
     form input, form select {
       width: 100%; 
@@ -159,10 +157,9 @@
     .info-label {
       font-size: 13px;
       color: #555;
-      margin-left: 10px;  /* lite luft mellan kg och labeln */
+      margin-left: 10px;
       font-weight: normal;
     }
-
 
     @media (max-width: 600px) {
       header { flex-direction: column; align-items: center; text-align: center; }
@@ -178,14 +175,11 @@
         min-height: calc(100vh - 200px);
       }
 
-      .newsletter-label {
-        font-size: 13px;   /* gör texten lite mindre */
-        color: #444;       /* valfritt: lite mjukare färg */
-      }
+      .newsletter-label { font-size: 13px; color: #444; }
 
       .newsletter-label input {
         vertical-align: middle;
-        transform: scale(1.1); /* kan förstora själva rutan lite om du vill */
+        transform: scale(1.1);
         margin-right: 5px;
         margin-top: 3px;
       }
@@ -204,11 +198,7 @@
       .quick { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
       .quick button { font-size: 14px; padding: 10px; }
 
-      footer { 
-        font-size: 14px; 
-        padding: 15px; 
-        padding: 50px 20px 20px;
-      }
+      footer { font-size: 14px; padding: 50px 20px 20px; }
       .footer-bg { height: 100px; }
 
       .popup-content { width: 90%; max-height: 80%; overflow-y: auto; }
@@ -229,11 +219,7 @@
   <main class="content">
     <section id="boka" class="tab-content active">
       <h2>Köp kräftor</h2>
-      <p>
-        <b>Tillgängliga kräftor:</b> 
-        <span id="available">....</span> kg
-        <span class="info-label">(1 kg är ca 20 kräftor)</span>
-      </p>
+      <p><b>Tillgängliga kräftor:</b> <span id="available">....</span> kg <span class="info-label">(1 kg är ca 20 kräftor)</span></p>
       <p><b>Pris per kg:</b> Kokta: <span id="priceKokta">....</span> kr, Levande: <span id="priceLevande">....</span> kr</p>
 
       <form id="bookingForm">
@@ -246,11 +232,7 @@
         <label>Email</label>
         <input type="email" id="email" placeholder="Valfritt">
 
-        <label class="newsletter-label">
-          <input type="checkbox" id="newsletter">
-          Jag vill få ett mail när nya kräftor finns tillgängliga
-        </label>
-
+        <label class="newsletter-label"><input type="checkbox" id="newsletter">Jag vill få ett mail när nya kräftor finns tillgängliga</label>
 
         <div class="kg-control">
           <button type="button" onclick="changeKg(-0.5)">−</button>
@@ -260,10 +242,8 @@
           </div>
           <button type="button" onclick="changeKg(0.5)">+</button>
         </div>
+
         <input type="hidden" id="amount" value="0">
-
-
-
         <label>Typ</label>
         <select id="type">
           <option value="kokta">Kokta</option>
@@ -284,35 +264,13 @@
 
     <section id="info" class="tab-content">
       <h2>Info om kräftor</h2>
-      <p>
-        <strong>Här kan du läsa mer om våra kräftor, skötselråd och tips inför kräftskivan.</strong>
-        <br>
-        <br>
-        <br>
-        Just nu fiskar vi enbart <strong>signalkräftor</strong>, men i framtiden vill vi även börja erbjuda 
-        <strong>flodkräftor</strong>. 
-        <br>
-        <br>
-        Allt fiske sker helt <strong>lagligt</strong> och i enlighet med gällande regler. 
-        <br>
-        Samtliga kräftor vi säljer är noggrant kontrollerade och håller sig inom de rekommenderade 
-        <strong>standardmåtten</strong>.
-      </p>
+      <p><strong>Här kan du läsa mer om våra kräftor, skötselråd och tips inför kräftskivan.</strong><br><br><br>Just nu fiskar vi enbart <strong>signalkräftor</strong>, men i framtiden vill vi även börja erbjuda <strong>flodkräftor</strong>.<br><br>Allt fiske sker helt <strong>lagligt</strong> och i enlighet med gällande regler.<br>Samtliga kräftor vi säljer är noggrant kontrollerade och håller sig inom de rekommenderade <strong>standardmåtten</strong>.</p>
     </section>
-
   </main>
 
   <footer>
-    <span>
-      Kontakta oss gärna vid några funderingar på 
-      <a href="mailto:olle@kopkraftor.se" style="color: #ffffff;">
-        olle@kopkraftor.se
-      </a>
-    </span>
-    <br>
-    <br>
-    <br>
-    &copy; <span id="year"></span> Olles & Maltes Fiske
+    <span>Kontakta oss gärna vid några funderingar på <a href="mailto:olle@kopkraftor.se" style="color: #ffffff;">olle@kopkraftor.se</a></span>
+    <br><br><br>&copy; <span id="year"></span> Olles & Maltes Fiske
   </footer>
   <div class="footer-bg"></div>
 
@@ -325,7 +283,7 @@
   </div>
 
   <script>
-    const scriptURL = "https://script.google.com/macros/s/AKfycbwi2oaJLM4H1kRN5NCJyc2HjkwLrQWsvf0F0fSTwYB_58Q90Ds21BoYTd2wEZAiwYUKhA/exec"; 
+    const scriptURL = "https://script.google.com/macros/s/AKfycbxkwQjbuDoW7MxztzuMG-5wjdHTtQCrjuwkx8MLqRo0voWWL4CZZIV_1KmCsvSKlhHwJw/exec"; 
     let prices = { kokta: 0, levande: 0 };
 
     async function loadMeta() {
@@ -347,13 +305,12 @@
 
     function changeKg(step) {
       let current = parseFloat(document.getElementById("amount").value) || 0;
-      current = Math.max(0, current + step); // aldrig under 0
-      current = Math.round(current * 2) / 2; // rundar till närmaste 0,5
+      current = Math.max(0, current + step);
+      current = Math.round(current * 2) / 2;
       document.getElementById("amount").value = current;
       document.getElementById("kgDisplay").textContent = current.toFixed(1);
       updateTotal();
     }
-
 
     function updateTotal() {
       const antal = parseFloat(document.getElementById("amount").value) || 0;
@@ -361,7 +318,6 @@
       const total = antal * (prices[typ] || 0);
       document.getElementById("total").textContent = total;
     }
-
 
     document.getElementById("amount").addEventListener("input", updateTotal);
     document.getElementById("type").addEventListener("change", updateTotal);
@@ -386,12 +342,8 @@
         });
         const result = await res.json();
         if (result.success) {
-          document.getElementById("popupText").innerHTML = 
-          `Du har bokat ${booking.amount} kg ${booking.type} kräftor för totalt ${result.pris} kr.<br><br>
-          Bokningsbekräftelse skickas via SMS.`;
-
+          document.getElementById("popupText").innerHTML = `Du har bokat ${booking.amount} kg ${booking.type} kräftor för totalt ${result.pris} kr.<br><br>Bokningsbekräftelse skickas via Epost.`;
           document.getElementById("popup").style.display = "flex";
-
           resultEl.textContent = "";
           await loadMeta();
           updateTotal();
