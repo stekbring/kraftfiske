@@ -285,7 +285,7 @@
   </div>
 
   <script>
-    const scriptURL = "https://script.google.com/macros/s/AKfycbzW1_QougSqUbAr3Cvl1nZvI5tuVm-CEGkZ9lPIThBOXbOaGvLbMi_Qm_5JGM8AugTaig/exec"; 
+    const scriptURL = "https://script.google.com/macros/s/AKfycbxahjohopsoVzKemYoZL7gFW8tBL13LMUlvTqBb73KZGPCD1mptQBkHkX7_zUIdDafp/exec"; 
     let prices = { kokta: 0, levande: 0 };
     let soldOut = false; // true när det är slut på kräftor
 
@@ -392,21 +392,23 @@
         resultEl.textContent = 'Skickar anmälan...';
         try {
           const res = await fetch(scriptURL, { method: "POST", body: JSON.stringify(notifyPayload) });
-          // försök tolka svaret, men visa uppskattning även om vi inte får ett korrekt JSON-svar
-          try {
-            const parsed = await res.json();
-            if (parsed && parsed.success) {
-              resultEl.textContent = 'Tack! Vi kontaktar dig när nya kräftor finns tillgängliga.';
+          const parsed = await res.json();
+          if (parsed.success) {
+            if (parsed.newsletterStatus === "exists") {
+              resultEl.textContent = "Email redan tillagd för nyhetsbrev.";
+            } else if (parsed.newsletterStatus === "added") {
+              resultEl.textContent = "Email-adressen tillagd för nyhetsbrev. Tack!";
             } else {
-              resultEl.textContent = 'Tack! Vi kontaktar dig när nya kräftor finns tillgängliga.';
+              resultEl.textContent = "Tack! Vi kontaktar dig när nya kräftor finns tillgängliga.";
             }
-          } catch (e) {
-            resultEl.textContent = 'Tack! Vi kontaktar dig när nya kräftor finns tillgängliga.';
+          } else {
+            resultEl.textContent = "Något gick fel. Försök igen.";
           }
         } catch (err) {
-          resultEl.textContent = 'Fel vid anmälan! Försök igen senare.';
+          resultEl.textContent = "Fel vid anmälan! Försök igen senare.";
           console.error(err);
         }
+
         return; // gör inte vanlig bokning
       }
 
@@ -429,12 +431,21 @@
         });
         const result = await res.json();
         if (result.success) {
-          document.getElementById("popupText").innerHTML = `Du har bokat ${booking.amount} kg ${booking.type} kräftor för totalt ${result.pris} kr.<br><br>Bokningsbekräftelse skickas via Epost.`;
+          let newsletterMsg = "";
+          if (result.newsletterStatus === "exists") {
+            newsletterMsg = "<br><br>Email redan tillagd för nyhetsbrev.";
+          } else if (result.newsletterStatus === "added") {
+            newsletterMsg = "<br><br>Email-adressen tillagd för nyhetsbrev.";
+          }
+
+          document.getElementById("popupText").innerHTML = 
+            `Du har bokat ${booking.amount} kg ${booking.type} kräftor för totalt ${result.pris} kr.<br><br>Bokningsbekräftelse skickas via Epost.${newsletterMsg}`;
           document.getElementById("popup").style.display = "flex";
           resultEl.textContent = "";
           await loadMeta();
           updateTotal();
-        } else if (result.error === "NOT_ENOUGH_STOCK") {
+        }
+          else if (result.error === "NOT_ENOUGH_STOCK") {
           resultEl.textContent = `Det finns bara ${result.available} kg kräftor kvar.`;
           await loadMeta();
         } else {
