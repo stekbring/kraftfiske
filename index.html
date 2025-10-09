@@ -252,6 +252,8 @@
 
         <p class="info">Totalsumma: <span id="total">0</span> kr</p>
         <button type="submit">Boka</button>
+        <!-- extra submit used only when sold out (visas istället för "Boka") -->
+        <button type="submit" id="notifyBtn" style="display:none">Meddela mig</button>
       </form>
 
       <p id="result"></p>
@@ -270,7 +272,7 @@
 
   <footer>
     <span>Kontakta oss gärna vid några funderingar på <a href="mailto:olle@kopkraftor.se" style="color: #ffffff;">olle@kopkraftor.se</a></span>
-    <br><br><br>&copy; <span id="year"></span> Olles & Maltes Fiske
+    <br><br><br>&copy; <span id="year"></span>   Olles & Maltes Fiske
   </footer>
   <div class="footer-bg"></div>
 
@@ -285,6 +287,7 @@
   <script>
     const scriptURL = "https://script.google.com/macros/s/AKfycbzW1_QougSqUbAr3Cvl1nZvI5tuVm-CEGkZ9lPIThBOXbOaGvLbMi_Qm_5JGM8AugTaig/exec"; 
     let prices = { kokta: 0, levande: 0 };
+    let soldOut = false; // true när det är slut på kräftor
 
     async function loadMeta() {
       const availableEl = document.getElementById("available");
@@ -292,11 +295,62 @@
       try {
         const res = await fetch(scriptURL);
         const data = await res.json();
+        // uppdatera priser och tillgänglighet
         availableEl.textContent = data.available;
         document.getElementById("priceKokta").textContent = data.pricePerKg.kokta;
         document.getElementById("priceLevande").textContent = data.pricePerKg.levande;
         prices = data.pricePerKg;
         document.getElementById("amount").max = data.available || 0;
+
+        // --- NY FUNKTIONALITET: om slut på kräftor, göm order-relaterade fält ---
+        const orderKg = document.querySelector('.kg-control');
+        const typeSelect = document.getElementById('type');
+        const totalP = document.querySelector('p.info');
+        const priceP = document.querySelector('#boka > p:nth-of-type(2)');
+        const bookingSubmit = document.querySelector('#bookingForm button[type="submit"]');
+        const notifyBtn = document.getElementById('notifyBtn');
+        const typeLabel = document.querySelector("#type").previousElementSibling;
+        const newsletterLabel = document.querySelector(".newsletter-label");
+        const emailField = document.getElementById("email");
+
+        if (data.available <= 0) {
+          soldOut = true;
+          // göm kilo-kontroller, typ-val och totalsumma
+          if (orderKg) orderKg.style.display = 'none';
+          if (typeSelect) typeSelect.style.display = 'none';
+          if (totalP) totalP.style.display = 'none';
+          if (priceP) priceP.style.display = 'none';
+          // göm ordinarie "Boka"-knapp (den ligger först i DOM-listan över submit-knappar)
+          if (bookingSubmit) bookingSubmit.style.display = 'none';
+          // visa den enklare submit-knappen för att anmäla sig
+          if (notifyBtn) notifyBtn.style.display = 'block';
+          if (typeLabel) typeLabel.style.display = 'none';
+          if (newsletterLabel) newsletterLabel.style.display = 'none';
+          if (emailField) emailField.placeholder = '';
+
+          // uppdatera status-texten högst upp (men behåll en dold span#available för framtida uppdateringar)
+          const statusP = availableEl.parentElement;
+          statusP.innerHTML = '<b>Tyvärr finns inga kräftor tillgängliga just nu. <br><br></b> Fyll i dina uppgifter för att få ett meddelande när nya kräftor finns tillgängliga. <span id="available" style="display:none">0</span>';
+          // markera automatisk att användaren vill ha mail
+          const news = document.getElementById('newsletter'); if (news) news.checked = true;
+        } else {
+          // återställ vy till normal
+          soldOut = false;
+          if (orderKg) orderKg.style.display = '';
+          if (typeSelect) typeSelect.style.display = '';
+          if (totalP) totalP.style.display = '';
+          if (priceP) priceP.style.display = '';
+          if (bookingSubmit) bookingSubmit.style.display = '';
+          if (typeLabel) typeLabel.style.display = '';
+          if (newsletterLabel) newsletterLabel.style.display = '';
+          if (notifyBtn) notifyBtn.style.display = 'none';
+          if (emailField) emailField.placeholder = 'Valfritt';
+
+          // återställ status-text
+          const statusP = availableEl.parentElement;
+          statusP.innerHTML = `<b>Tillgängliga kräftor:</b> <span id="available">${data.available}</span> kg <span class="info-label">(1 kg är ca 20 kräftor)</span>`;
+        }
+
       } catch (err) {
         availableEl.textContent = "Fel vid hämtning!";
         console.error(err);
@@ -324,6 +378,39 @@
 
     document.getElementById("bookingForm").addEventListener("submit", async (e) => {
       e.preventDefault();
+
+      // Om slut på kräftor: skicka bara anmälan om nyhetsbrev (namn + epost eller telefonnummer)
+      if (soldOut) {
+        const name = document.getElementById("name").value.trim();
+        const phone = document.getElementById("phone").value.trim();
+        const email = document.getElementById("email").value.trim();
+        const resultEl = document.getElementById("result");
+        if (!name) { resultEl.textContent = 'Fyll i ditt namn.'; return; }
+        if (!phone && !email) { resultEl.textContent = 'Fyll i e-post eller telefonnummer så vi kan kontakta dig.'; return; }
+
+        const notifyPayload = { name, phone, email, newsletter: true };
+        resultEl.textContent = 'Skickar anmälan...';
+        try {
+          const res = await fetch(scriptURL, { method: "POST", body: JSON.stringify(notifyPayload) });
+          // försök tolka svaret, men visa uppskattning även om vi inte får ett korrekt JSON-svar
+          try {
+            const parsed = await res.json();
+            if (parsed && parsed.success) {
+              resultEl.textContent = 'Tack! Vi kontaktar dig när nya kräftor finns tillgängliga.';
+            } else {
+              resultEl.textContent = 'Tack! Vi kontaktar dig när nya kräftor finns tillgängliga.';
+            }
+          } catch (e) {
+            resultEl.textContent = 'Tack! Vi kontaktar dig när nya kräftor finns tillgängliga.';
+          }
+        } catch (err) {
+          resultEl.textContent = 'Fel vid anmälan! Försök igen senare.';
+          console.error(err);
+        }
+        return; // gör inte vanlig bokning
+      }
+
+      // --- vanlig bokningslogik (oförändrad) ---
       const booking = {
         name: document.getElementById("name").value.trim(),
         phone: document.getElementById("phone").value.trim(),
@@ -373,9 +460,10 @@
     document.getElementById("year").textContent = new Date().getFullYear();
     loadMeta();
 
+    // justera kravet på epost endast när det inte är "slut"
     document.getElementById("newsletter").addEventListener("change", function() {
       const emailField = document.getElementById("email");
-      if (this.checked) {
+      if (this.checked && !soldOut) {
         emailField.required = true;
         emailField.placeholder = "Obligatorisk om du vill ha nyhetsbrev";
       } else {
