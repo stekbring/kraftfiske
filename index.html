@@ -227,7 +227,7 @@
         <input type="text" id="name" required>
 
         <label>Telefonnummer</label>
-        <input type="text" id="phone" required>
+        <input type="text" id="phone">
 
         <label>Email</label>
         <input type="email" id="email" placeholder="Valfritt">
@@ -285,7 +285,7 @@
   </div>
 
   <script>
-    const scriptURL = "https://script.google.com/macros/s/AKfycbzW1_QougSqUbAr3Cvl1nZvI5tuVm-CEGkZ9lPIThBOXbOaGvLbMi_Qm_5JGM8AugTaig/exec"; 
+    const scriptURL = "https://script.google.com/macros/s/AKfycbw1GyNmG5z_4IBKnqRH7-M34kHAfLbg_ucWmtZJ0PBH9FmazXPFwHalNAJHqDVPsxIYKw/exec"; 
     let prices = { kokta: 0, levande: 0 };
     let soldOut = false; // true när det är slut på kräftor
 
@@ -392,15 +392,16 @@
         resultEl.textContent = 'Skickar anmälan...';
         try {
           const res = await fetch(scriptURL, { method: "POST", body: JSON.stringify(notifyPayload) });
-          // försök tolka svaret, men visa uppskattning även om vi inte får ett korrekt JSON-svar
-          try {
-            const parsed = await res.json();
-            if (parsed && parsed.success) {
-              resultEl.textContent = 'Tack! Vi kontaktar dig när nya kräftor finns tillgängliga.';
+          const parsed = await res.json();
+          if (parsed && parsed.success) {
+            if (parsed.newsletterStatus === "added") {
+              resultEl.textContent = 'Tack! Du har lagts till på nyhetsbrevet och får ett mail när nya kräftor finns.';
+            } else if (parsed.newsletterStatus === "exists") {
+              resultEl.textContent = 'Din e-post finns redan i nyhetsbrevslistan. Vi meddelar dig när nya kräftor finns.';
             } else {
               resultEl.textContent = 'Tack! Vi kontaktar dig när nya kräftor finns tillgängliga.';
             }
-          } catch (e) {
+          } else {
             resultEl.textContent = 'Tack! Vi kontaktar dig när nya kräftor finns tillgängliga.';
           }
         } catch (err) {
@@ -429,12 +430,19 @@
         });
         const result = await res.json();
         if (result.success) {
-          document.getElementById("popupText").innerHTML = `Du har bokat ${booking.amount} kg ${booking.type} kräftor för totalt ${result.pris} kr.<br><br>Bokningsbekräftelse skickas via Epost.`;
-          document.getElementById("popup").style.display = "flex";
-          resultEl.textContent = "";
-          await loadMeta();
-          updateTotal();
-        } else if (result.error === "NOT_ENOUGH_STOCK") {
+            const prisText = result.pris 
+              ? `${result.pris} kr`
+              : `${booking.amount * (prices[booking.type] || 0)} kr`;
+
+            document.getElementById("popupText").innerHTML =
+              `Du har bokat ${booking.amount} kg ${booking.type} kräftor för totalt ${prisText}.<br><br>Bokningsbekräftelse skickas via Epost.`;
+
+            document.getElementById("popup").style.display = "flex";
+            resultEl.textContent = "";
+            await loadMeta();
+            updateTotal();
+          }
+          else if (result.error === "NOT_ENOUGH_STOCK") {
           resultEl.textContent = `Det finns bara ${result.available} kg kräftor kvar.`;
           await loadMeta();
         } else {
