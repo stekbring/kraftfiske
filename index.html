@@ -332,9 +332,6 @@
         firstLoad = false;
 
         // uppdatera priser och tillgänglighet
-        availableEl.textContent = data.available;
-        document.getElementById("priceKokta").textContent = data.pricePerKg.kokta;
-        document.getElementById("priceLevande").textContent = data.pricePerKg.levande;
         prices = data.pricePerKg;
         document.getElementById("amount").max = data.available || 0;
 
@@ -525,7 +522,33 @@
       }
     });
 
-    setInterval(loadMeta, 1000); // uppdatera sidan var 10:e sekund
+    let intervalId;
+
+    function startAutoUpdate() {
+      if (!intervalId) {
+        intervalId = setInterval(loadMeta, 1000); // uppdatera varje sekund när sidan är aktiv
+      }
+    }
+
+    function stopAutoUpdate() {
+      if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+    }
+
+    // Starta uppdatering direkt om sidan är aktiv
+    if (!document.hidden) startAutoUpdate();
+
+    // Lyssna på när användaren byter flik
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        stopAutoUpdate(); // pausa när sidan är i bakgrunden
+      } else {
+        loadMeta();       // uppdatera direkt när användaren kommer tillbaka
+        startAutoUpdate(); // starta intervallet igen
+      }
+    });
 
   </script>
 </body>
