@@ -433,18 +433,26 @@
         });
         const result = await res.json();
         if (result.success) {
-            const prisText = result.pris 
-              ? `${result.pris} kr`
-              : `${booking.amount * (prices[booking.type] || 0)} kr`;
+          const prisText = result.pris 
+            ? `${result.pris} kr`
+            : `${booking.amount * (prices[booking.type] || 0)} kr`;
 
-            document.getElementById("popupText").innerHTML =
-              `Du har bokat ${booking.amount} kg ${booking.type} kräftor för totalt ${prisText}.<br><br>Bokningsbekräftelse skickas via Epost.`;
-
-            document.getElementById("popup").style.display = "flex";
-            resultEl.textContent = "";
-            await loadMeta();
-            updateTotal();
+          let extraText = "";
+          if (result.newsletterStatus === "added") {
+            extraText = "<br><br>Du har lagts till på nyhetslistan och får <br> ett mail när nya kräftor finns.";
+          } else if (result.newsletterStatus === "exists") {
+            extraText = "<br><br>Din e-postadress finns redan i nyhetslistan.";
           }
+
+          document.getElementById("popupText").innerHTML =
+            `Du har bokat ${booking.amount} kg ${booking.type} kräftor för totalt ${prisText}.<br><br>Bokningsbekräftelse skickas via e-post.${extraText}`;
+
+          document.getElementById("popup").style.display = "flex";
+          resultEl.textContent = "";
+          await loadMeta();
+          updateTotal();
+        }
+
           else if (result.error === "NOT_ENOUGH_STOCK") {
           resultEl.textContent = `Det finns bara ${result.available} kg kräftor kvar.`;
           await loadMeta();
