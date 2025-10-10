@@ -232,7 +232,7 @@
         <input type="text" id="phone">
 
         <label>Email</label>
-        <input type="email" id="email" placeholder="Valfritt">
+        <input type="email" id="email" required>
 
         <label class="newsletter-label"><input type="checkbox" id="newsletter">Jag vill få ett mail när nya kräftor finns tillgängliga</label>
 
@@ -359,8 +359,9 @@
           if (notifyBtn) notifyBtn.style.display = 'block';
           if (typeLabel) typeLabel.style.display = 'none';
           if (newsletterLabel) newsletterLabel.style.display = 'none';
-          if (emailField) emailField.placeholder = '';
-
+          if (emailField && !document.getElementById("newsletter").checked) {
+            emailField.placeholder = '';
+          }
           // uppdatera status-texten högst upp (men behåll en dold span#available för framtida uppdateringar)
           const statusP = availableEl.parentElement;
           statusP.innerHTML = '<b>Tyvärr finns inga kräftor tillgängliga just nu. <br><br></b> Fyll i dina uppgifter för att få ett meddelande när nya kräftor finns tillgängliga. <span id="available" style="display:none">0</span>';
@@ -377,8 +378,9 @@
           if (typeLabel) typeLabel.style.display = '';
           if (newsletterLabel) newsletterLabel.style.display = '';
           if (notifyBtn) notifyBtn.style.display = 'none';
-          if (emailField) emailField.placeholder = 'Valfritt';
-
+          if (emailField && !document.getElementById("newsletter").checked) {
+            emailField.placeholder = '';
+          }
           // återställ status-text
           const statusP = availableEl.parentElement;
           statusP.innerHTML = `<b>Tillgängliga kräftor:</b> <span id="available">${data.available}</span> kg <span class="info-label">(1 kg är ca 20 kräftor)</span>`;
@@ -518,7 +520,7 @@
         emailField.placeholder = "Obligatorisk om du vill ha nyhetsbrev";
       } else {
         emailField.required = false;
-        emailField.placeholder = "Valfritt";
+        emailField.placeholder = "";
       }
     });
 
@@ -526,7 +528,7 @@
 
     function startAutoUpdate() {
       if (!intervalId) {
-        intervalId = setInterval(loadMeta, 3000); // uppdatera varje sekund när sidan är aktiv
+        intervalId = setInterval(loadMeta, 3000); // uppdatera när sidan är aktiv
       }
     }
 
