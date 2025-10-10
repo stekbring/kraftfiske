@@ -30,6 +30,8 @@
     header img { 
       height: 50px; 
       margin-right: 20px; 
+      margin-top: 10px;
+      margin-bottom: 10px;
     }
     header h1 { 
       font-size: 24px; 
@@ -399,15 +401,16 @@
             } else if (parsed.newsletterStatus === "exists") {
               resultEl.textContent = 'Din e-post finns redan i nyhetsbrevslistan. Vi meddelar dig när nya kräftor finns.';
             } else {
-              resultEl.textContent = 'Tack! Vi kontaktar dig när nya kräftor finns tillgängliga.';
+              resultEl.textContent = "Tack! Vi kontaktar dig när nya kräftor finns tillgängliga.";
             }
           } else {
             resultEl.textContent = 'Tack! Vi kontaktar dig när nya kräftor finns tillgängliga.';
           }
         } catch (err) {
-          resultEl.textContent = 'Fel vid anmälan! Försök igen senare.';
+          resultEl.textContent = "Fel vid anmälan! Försök igen senare.";
           console.error(err);
         }
+
         return; // gör inte vanlig bokning
       }
 
