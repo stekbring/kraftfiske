@@ -290,13 +290,47 @@
     const scriptURL = "https://script.google.com/macros/s/AKfycbxB-oQZ01jcxDjN6j4SHtRwwRUxNPxfGxvyRrFInDzlMg7XUJgnkd1C7LWg7Prhrmrzlw/exec"; 
     let prices = { kokta: 0, levande: 0 };
     let soldOut = false; // true när det är slut på kräftor
+    let lastAvailable = null;
+    let lastPriceKokta = null;
+    let lastPriceLevande = null;
+    let firstLoad = true;
 
     async function loadMeta() {
       const availableEl = document.getElementById("available");
-      availableEl.textContent = "....";
       try {
         const res = await fetch(scriptURL);
         const data = await res.json();
+        // --- visa "...." bara första gången ---
+        const availableEl = document.getElementById("available");
+        const priceKoktaEl = document.getElementById("priceKokta");
+        const priceLevandeEl = document.getElementById("priceLevande");
+
+        if (firstLoad) {
+          availableEl.textContent = "....";
+          priceKoktaEl.textContent = "....";
+          priceLevandeEl.textContent = "....";
+        }
+
+        // --- uppdatera bara om värdet ändrats ---
+        if (data.available !== lastAvailable) {
+          availableEl.textContent = data.available;
+          lastAvailable = data.available;
+        }
+
+        if (data.pricePerKg.kokta !== lastPriceKokta) {
+          priceKoktaEl.textContent = data.pricePerKg.kokta;
+          lastPriceKokta = data.pricePerKg.kokta;
+        }
+
+        if (data.pricePerKg.levande !== lastPriceLevande) {
+          priceLevandeEl.textContent = data.pricePerKg.levande;
+          lastPriceLevande = data.pricePerKg.levande;
+        }
+
+        // uppdatera lokala priser och markera att första laddningen är klar
+        prices = data.pricePerKg;
+        firstLoad = false;
+
         // uppdatera priser och tillgänglighet
         availableEl.textContent = data.available;
         document.getElementById("priceKokta").textContent = data.pricePerKg.kokta;
@@ -490,6 +524,9 @@
         emailField.placeholder = "Valfritt";
       }
     });
+
+    setInterval(loadMeta, 1000); // uppdatera sidan var 10:e sekund
+
   </script>
 </body>
 </html>
