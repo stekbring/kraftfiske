@@ -409,7 +409,7 @@
 
     // small helpers
     function escapeHtml(str){ if(!str) return ''; return String(str).replace(/[&<>"']/g, function(m){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"})[m]; }); }
-
+    document.getElementById("year").textContent = new Date().getFullYear();
     // init
     (async function init(){
       await loadMeta();
@@ -417,6 +417,6 @@
     })();
   </script>
 
-  <footer style="text-align:center; padding:18px; color:#fff; background:var(--header); margin-top:26px">&copy; Olles & Maltes Fiske</footer>
+  <footer style="text-align:center; padding:18px; color:#fff; background:var(--header); margin-top:26px">&copy; <span id="year"></span> Olles & Maltes Fiske</footer>
 </body>
 </html>
