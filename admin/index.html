@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin - Olles Fiske</title>
+  <link rel="icon" type="image/png" href="loggasimpelvit.ico">
+  <style>
+    /* --- färger och typografi matchar din hemsida --- */
+    :root{
+      --bg: #891212; /* huvudbakgrund */
+      --header: #680c0c;
+      --card: #ffffff;
+      --muted: #555;
+      --accent: #891212;
+      --radius: 10px;
+      --max-width: 1100px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family: 'Times New Roman', Times, serif, Helvetica, sans-serif; background:var(--bg); color:#111; min-height:100vh; display:flex; flex-direction:column;
+    }
+    header{background:var(--header); color:white; padding:14px 18px; display:flex; align-items:center; gap:14px;}
+    header img{height:30px}
+    header h1{font-size:20px;margin:0}
+    .wrap{width:95%; max-width:var(--max-width); margin:18px auto 80px;}
+
+    .grid{display:grid; grid-template-columns: 1fr 360px; gap:18px;}
+    .card{background:var(--card); border-radius:var(--radius); padding:16px; box-shadow:0 6px 20px rgba(0,0,0,0.12);} 
+
+    /* Dashboard top */
+    .stats{display:flex; gap:12px; align-items:stretch}
+    .stat{flex:1; padding:12px; border-radius:8px; background:#fff7f7; display:flex; flex-direction:column; justify-content:center;}
+    .stat h3{margin:0;font-size:14px;color:var(--muted)}
+    .stat p{margin:6px 0 0; font-size:20px; font-weight:bold}
+
+    /* form styles */
+    label{display:block; margin-top:8px; font-size:13px}
+    input[type="text"], input[type="number"], textarea, select{width:100%; padding:8px; margin-top:6px; border:1px solid #ddd; border-radius:6px}
+    button{background:var(--accent); color:white; border:0; padding:10px 12px; border-radius:8px; cursor:pointer}
+
+    /* orders table */
+    table{width:100%; border-collapse:collapse; font-size:13px}
+    th, td{padding:8px; border-bottom:1px solid #eee; text-align:left}
+    th{background:#fafafa}
+    .small{font-size:12px;color:var(--muted)}
+
+    /* right column */
+    .right-col{display:flex; flex-direction:column; gap:12px}
+
+    /* responsive */
+    @media (max-width:900px){
+      .grid{grid-template-columns: 1fr;}
+      header{flex-direction:column; align-items:flex-start}
+    }
+
+    /* mobile tweaks */
+    @media (max-width:480px){
+      header img{height:48px}
+      header h1{font-size:18px}
+    }
+
+    /* small helper styles */
+    .muted{color:var(--muted)}
+    .pill{display:inline-block;padding:6px 10px;border-radius:999px;background:#fff0f0;font-weight:600}
+    .status-select{padding:6px;border-radius:6px}
+  </style>
+</head>
+<body>
+  <header>
+    <img src="loggasimpelvit2.png" alt="logo">
+    <h1>Admin — Olles & Maltes Fiske</h1>
+    <div style="margin-left:auto;color:#fff;font-size:13px">Mobil & Desktop</div>
+  </header>
+
+  <div class="wrap">
+    <div class="grid">
+      <div>
+        <div class="card">
+          <div class="stats">
+            <div class="stat">
+              <h3>Tillgängliga kg</h3>
+              <p id="adminAvailable">—</p>
+            </div>
+            <div class="stat">
+              <h3>Pris / kg (kokta)</h3>
+              <p id="adminPriceKokta">— kr</p>
+            </div>
+            <div class="stat">
+              <h3>Pris / kg (levande)</h3>
+              <p id="adminPriceLevande">— kr</p>
+            </div>
+          </div>
+
+          <hr style="margin:14px 0">
+
+          <h3>Uppdatera lager & pris</h3>
+          <form id="metaForm">
+            <label>Antal tillgängliga (kg)</label>
+            <input type="number" step="0.5" id="inputAvailable" min="0">
+
+            <label>Pris kokta (kr / kg)</label>
+            <input type="number" step="1" id="inputPriceKokta" min="0">
+
+            <label>Pris levande (kr / kg)</label>
+            <input type="number" step="1" id="inputPriceLevande" min="0">
+
+            <div style="display:flex; gap:8px; margin-top:10px">
+              <button type="button" id="saveMeta">Spara</button>
+              <button type="button" id="setSoldOut">Sätt som SLUT</button>
+              <button type="button" id="resetSoldOut" style="display:none">Återställ</button>
+            </div>
+            <p id="metaResult" class="small muted"></p>
+          </form>
+
+          <hr style="margin:14px 0">
+
+          <h3>Huvudsida — Snabbredigering</h3>
+          <label>Rubrik (om-del)</label>
+          <input type="text" id="frontTitle">
+          <label>Text — kort (om-del)</label>
+          <textarea id="frontText" rows="4"></textarea>
+          <div style="display:flex; gap:8px; margin-top:8px">
+            <button id="saveFront">Spara innehåll</button>
+          </div>
+          <p id="frontResult" class="small muted"></p>
+        </div>
+
+        <div class="card" style="margin-top:12px">
+          <h3>Skicka nyhetsbrev</h3>
+          <p class="small muted">Använd ditt befintliga Apps Script för att skicka till alla i listan.</p>
+          <label>Ämne</label>
+          <input type="text" id="newsletterSubject" placeholder="Rubrik i mailet">
+          <label>Meddelande</label>
+          <textarea id="newsletterBody" rows="6"></textarea>
+          <div style="display:flex; gap:8px; margin-top:8px">
+            <button id="previewNewsletter">Förhandsgranska</button>
+            <button id="sendNewsletter">Skicka nu</button>
+          </div>
+          <p id="newsletterResult" class="small muted"></p>
+        </div>
+
+      </div>
+
+      <aside class="right-col">
+        <div class="card">
+          <h3>Beställningar</h3>
+          <p class="small muted">Ladda beställningar nedan, ändra leveransstatus och spara.</p>
+          <div style="display:flex; gap:8px; margin-top:8px">
+            <button id="refreshOrders">Ladda</button>
+            <button id="exportCsv">Exportera CSV</button>
+          </div>
+
+          <div style="margin-top:12px; overflow:auto; max-height:520px">
+            <table id="ordersTable">
+              <thead><tr><th>#</th><th>Namn</th><th>Kontakt</th><th>Kg</th><th>Typ</th><th>Status</th><th></th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Snabbåtgärder</h3>
+          <p class="small muted">Välj och markera beställningar som skickade, avbokade eller återbetalda.</p>
+          <div style="display:flex; gap:8px; margin-top:8px">
+            <button id="markSent">Markera som skickad</button>
+            <button id="markCancelled">Avboka</button>
+            <button id="markRefund">Återbetala</button>
+          </div>
+          <p id="quickResult" class="small muted"></p>
+        </div>
+
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    /************************************************************************
+     * ADMIN FRONTEND
+     * Den här admin-sidan är en fristående HTML/JS-fil som är tänkt att
+     * användas tillsammans med ditt Google Apps Script (Google Sheets).
+     *
+     * OBS: Du skickade tidigare en scriptURL i din kundsida. Återanvänd den
+     * i variabeln nedan (eller byt mot den url som ditt AppScript exponerar).
+     *
+     * APIs antagna här (exempel):
+     *  - GET scriptURL                      -> returnerar JSON med meta (available, pricePerKg etc)
+     *  - GET scriptURL + '?action=orders'    -> returnerar array med orders
+     *  - POST scriptURL med { action: 'updateMeta', ... } -> uppdatera lager/priser
+     *  - POST scriptURL med { action: 'updateOrder', orderId, status } -> uppdatera order
+     *  - POST scriptURL med { action: 'sendNewsletter', subject, body } -> trigga utskick
+     *
+     * När du skickar ditt Apps Script så kan jag snabbt justera action-namn
+     * så frontend pratar korrekt med ditt backend.
+     *************************************************************************/
+
+    const scriptURL = "https://script.google.com/macros/s/AKfycbw7gx8Lv8grjtbcITS-J-bPbZqQMbcJLsC6LMGCOLk138lUy-R37UZIHOSC4GFYRdiOZQ/exec"; // <-- samma som på din sida (ändra vid behov)
+
+    // enkel lokal 'auth' (ej säker för produktion) — rekommendera server-side auth
+    const ADMIN_PASS_KEY = 'admin_auth_v1';
+
+    async function requireAuth(){
+      const ok = localStorage.getItem(ADMIN_PASS_KEY);
+      if(ok) return true;
+      const pw = prompt('Ange adminlösenord (lokal kontroll)');
+      if(!pw) return false;
+      // välj att spara token lokalt — för demo är detta ok. Byt mot riktig auth.
+      localStorage.setItem(ADMIN_PASS_KEY, btoa(pw));
+      return true;
+    }
+
+    // --- DOM helpers ---
+    const adminAvailable = document.getElementById('adminAvailable');
+    const adminPriceKokta = document.getElementById('adminPriceKokta');
+    const adminPriceLevande = document.getElementById('adminPriceLevande');
+
+    const inputAvailable = document.getElementById('inputAvailable');
+    const inputPriceKokta = document.getElementById('inputPriceKokta');
+    const inputPriceLevande = document.getElementById('inputPriceLevande');
+
+    const metaResult = document.getElementById('metaResult');
+
+    const frontTitle = document.getElementById('frontTitle');
+    const frontText = document.getElementById('frontText');
+    const frontResult = document.getElementById('frontResult');
+
+    const ordersTableBody = document.querySelector('#ordersTable tbody');
+
+    let orders = [];
+
+    // --- ladda metadata ---
+    async function loadMeta(){
+      try{
+        const res = await fetch(scriptURL);
+        const data = await res.json();
+        adminAvailable.textContent = data.available ?? '0';
+        adminPriceKokta.textContent = (data.pricePerKg?.kokta ?? '0') + ' kr';
+        adminPriceLevande.textContent = (data.pricePerKg?.levande ?? '0') + ' kr';
+
+        inputAvailable.value = data.available ?? 0;
+        inputPriceKokta.value = data.pricePerKg?.kokta ?? 0;
+        inputPriceLevande.value = data.pricePerKg?.levande ?? 0;
+
+        // om du sparar front-page-innehåll i ditt Sheet, fyll även frontTitle/text
+        if(data.front){
+          frontTitle.value = data.front.title || '';
+          frontText.value = data.front.text || '';
+        }
+
+      }catch(err){
+        console.error('Kunde inte ladda meta', err);
+        metaResult.textContent = 'Fel vid hämtning av metadata.';
+      }
+    }
+
+    // --- spara uppdaterad meta ---
+    document.getElementById('saveMeta').addEventListener('click', async ()=>{
+      if(!await requireAuth()) return alert('Fel lösenord eller avbrutet');
+      const payload = {
+        action: 'updateMeta',
+        available: parseFloat(inputAvailable.value) || 0,
+        pricePerKg: { kokta: parseFloat(inputPriceKokta.value)||0, levande: parseFloat(inputPriceLevande.value)||0 }
+      };
+      metaResult.textContent = 'Sparar...';
+      try{
+        const res = await fetch(scriptURL, { method:'POST', body: JSON.stringify(payload) });
+        const json = await res.json();
+        if(json && json.success){
+          metaResult.textContent = 'Sparat!';
+          await loadMeta();
+        } else {
+          metaResult.textContent = 'Kunde inte spara. Kontrollera scriptet.';
+        }
+      }catch(err){ console.error(err); metaResult.textContent = 'Fel vid sparande.' }
+    });
+
+    // sätt slut
+    document.getElementById('setSoldOut').addEventListener('click', async ()=>{
+      if(!await requireAuth()) return alert('Fel lösenord eller avbrutet');
+      inputAvailable.value = 0; document.getElementById('resetSoldOut').style.display='inline-block';
+    });
+    document.getElementById('resetSoldOut').addEventListener('click', ()=>{ inputAvailable.value = '' ; document.getElementById('resetSoldOut').style.display='none'; });
+
+    // --- front page save ---
+    document.getElementById('saveFront').addEventListener('click', async ()=>{
+      if(!await requireAuth()) return alert('Fel lösenord eller avbrutet');
+      frontResult.textContent = 'Sparar...';
+      const payload = { action: 'updateFront', front: { title: frontTitle.value, text: frontText.value } };
+      try{
+        const res = await fetch(scriptURL, { method:'POST', body: JSON.stringify(payload) });
+        const json = await res.json();
+        if(json && json.success){ frontResult.textContent = 'Sparat!'; }
+        else frontResult.textContent = 'Kunde inte spara innehåll.';
+      }catch(err){ console.error(err); frontResult.textContent='Fel vid sparande'; }
+    });
+
+    // --- ORDERS ---
+    async function loadOrders(){
+      try{
+        const res = await fetch(scriptURL + '?action=orders');
+        const arr = await res.json();
+        orders = Array.isArray(arr) ? arr : [];
+        renderOrders();
+      }catch(err){ console.error(err); }
+    }
+
+    function renderOrders(){
+      ordersTableBody.innerHTML='';
+      orders.forEach((o, i)=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${i+1}</td>
+          <td>${escapeHtml(o.name||'')}</td>
+          <td class="small">${escapeHtml(o.phone||'')}<br>${escapeHtml(o.email||'')}</td>
+          <td>${o.amount ?? ''}</td>
+          <td>${escapeHtml(o.type||'')}</td>
+          <td>
+            <select data-order-id="${o.id || i}" class="status-select">
+              <option value="pending" ${o.status==='pending'?'selected':''}>Pending</option>
+              <option value="confirmed" ${o.status==='confirmed'?'selected':''}>Bekräftad</option>
+              <option value="sent" ${o.status==='sent'?'selected':''}>Skickad</option>
+              <option value="cancelled" ${o.status==='cancelled'?'selected':''}>Avbokad</option>
+            </select>
+          </td>
+          <td><button data-order-id="${o.id || i}" class="save-order">Spara</button></td>`;
+        ordersTableBody.appendChild(tr);
+      });
+
+      // attach save handlers
+      document.querySelectorAll('.save-order').forEach(btn=>{
+        btn.addEventListener('click', async (e)=>{
+          if(!await requireAuth()) return alert('Fel lösenord eller avbrutet');
+          const id = e.target.dataset.orderId;
+          const sel = e.target.closest('tr').querySelector('select');
+          const status = sel.value;
+          await updateOrderStatus(id, status);
+        });
+      });
+    }
+
+    async function updateOrderStatus(orderId, status){
+      try{
+        const payload = { action: 'updateOrder', orderId, status };
+        const res = await fetch(scriptURL, { method:'POST', body: JSON.stringify(payload) });
+        const json = await res.json();
+        if(json && json.success){
+          document.getElementById('quickResult').textContent = 'Order uppdaterad.';
+          await loadOrders();
+        } else {
+          document.getElementById('quickResult').textContent = 'Kunde inte uppdatera order.';
+        }
+      }catch(err){ console.error(err); document.getElementById('quickResult').textContent='Fel vid uppdatering'; }
+    }
+
+    // --- quick actions for multiple selected orders ---
+    document.getElementById('markSent').addEventListener('click', async ()=>{ await bulkUpdateStatus('sent'); });
+    document.getElementById('markCancelled').addEventListener('click', async ()=>{ await bulkUpdateStatus('cancelled'); });
+    document.getElementById('markRefund').addEventListener('click', async ()=>{ await bulkUpdateStatus('refunded'); });
+
+    async function bulkUpdateStatus(status){
+      if(!await requireAuth()) return alert('Fel lösenord eller avbrutet');
+      // i denna demo: markera de synliga orders som inte already have status
+      const ids = orders.map(o=>o.id).slice(0,20); // EXEMPEL: du kan bygga checkboxar för valbara orders
+      if(!ids.length) return alert('Inga orders att uppdatera');
+      try{
+        const payload = { action: 'bulkUpdate', ids, status };
+        const res = await fetch(scriptURL, { method:'POST', body: JSON.stringify(payload) });
+        const json = await res.json();
+        if(json && json.success){ document.getElementById('quickResult').textContent = 'Bulk-uppdatering klar!'; await loadOrders(); }
+        else document.getElementById('quickResult').textContent = 'Kunde inte bulk-uppdatera.';
+      }catch(err){ console.error(err); document.getElementById('quickResult').textContent='Fel vid bulk-uppdatering'; }
+    }
+
+    // exportera CSV (enkelt klient-side)
+    document.getElementById('exportCsv').addEventListener('click', ()=>{
+      if(!orders.length) return alert('Inga orders att exportera');
+      const headers = ['id','name','phone','email','amount','type','status'];
+      const rows = orders.map(o=>headers.map(h=>`"${(o[h]||'').toString().replace(/"/g,'""')}"`).join(','));
+      const csv = [headers.join(','), ...rows].join('\n');
+      const blob = new Blob([csv], {type:'text/csv'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'orders.csv'; a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    document.getElementById('refreshOrders').addEventListener('click', loadOrders);
+
+    // --- NEWSLETTER ---
+    document.getElementById('sendNewsletter').addEventListener('click', async ()=>{
+      if(!await requireAuth()) return alert('Fel lösenord eller avbrutet');
+      const subject = document.getElementById('newsletterSubject').value.trim();
+      const body = document.getElementById('newsletterBody').value.trim();
+      if(!subject || !body) return alert('Fyll i ämne och meddelande');
+      document.getElementById('newsletterResult').textContent = 'Skickar...';
+      try{
+        const payload = { action: 'sendNewsletter', subject, body };
+        const res = await fetch(scriptURL, { method:'POST', body: JSON.stringify(payload) });
+        const json = await res.json();
+        if(json && json.success){ document.getElementById('newsletterResult').textContent = 'Nyhetsbrev skickat.'; }
+        else document.getElementById('newsletterResult').textContent = 'Kunde inte skicka.';
+      }catch(err){ console.error(err); document.getElementById('newsletterResult').textContent='Fel vid utskick'; }
+    });
+
+    document.getElementById('previewNewsletter').addEventListener('click', ()=>{
+      const s = document.getElementById('newsletterSubject').value;
+      const b = document.getElementById('newsletterBody').value;
+      const w = window.open('', '_blank', 'width=600,height=600');
+      w.document.write(`<h2>${escapeHtml(s)}</h2><div>${escapeHtml(b).replace(/\n/g,'<br>')}</div>`);
+    });
+
+    // small helpers
+    function escapeHtml(str){ if(!str) return ''; return String(str).replace(/[&<>"']/g, function(m){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"})[m]; }); }
+
+    // init
+    (async function init(){
+      await loadMeta();
+      await loadOrders();
+    })();
+  </script>
+
+  <footer style="text-align:center; padding:18px; color:#fff; background:var(--header); margin-top:26px">&copy; Olles & Maltes Fiske</footer>
+</body>
+</html>
