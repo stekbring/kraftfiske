@@ -67,6 +67,7 @@
   </style>
 </head>
 <body>
+
   <div id="loginScreen" style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; background:#891212; color:#fff;">
     <div style="background:#fff; color:#000; padding:20px; border-radius:10px; width:300px; box-shadow:0 4px 12px rgba(0,0,0,0.3);">
       <h2>Admin Login</h2>
@@ -84,7 +85,6 @@
   <header>
     <img src="loggasimpelvit2.png" alt="logo">
     <h1>Admin — Olles & Maltes Fiske</h1>
-    <div style="margin-left:auto;color:#fff;font-size:13px">Mobil & Desktop</div>
   </header>
 
   <div class="wrap">
@@ -189,28 +189,8 @@
   </div>
 
   <script>
-    /************************************************************************
-     * ADMIN FRONTEND
-     * Den här admin-sidan är en fristående HTML/JS-fil som är tänkt att
-     * användas tillsammans med ditt Google Apps Script (Google Sheets).
-     *
-     * OBS: Du skickade tidigare en scriptURL i din kundsida. Återanvänd den
-     * i variabeln nedan (eller byt mot den url som ditt AppScript exponerar).
-     *
-     * APIs antagna här (exempel):
-     *  - GET scriptURL                      -> returnerar JSON med meta (available, pricePerKg etc)
-     *  - GET scriptURL + '?action=orders'    -> returnerar array med orders
-     *  - POST scriptURL med { action: 'updateMeta', ... } -> uppdatera lager/priser
-     *  - POST scriptURL med { action: 'updateOrder', orderId, status } -> uppdatera order
-     *  - POST scriptURL med { action: 'sendNewsletter', subject, body } -> trigga utskick
-     *
-     * När du skickar ditt Apps Script så kan jag snabbt justera action-namn
-     * så frontend pratar korrekt med ditt backend.
-     *************************************************************************/
 
-    const scriptURL = "https://script.google.com/macros/s/AKfycbw66YDDfZp11z_7aPCB98SL59pVYnY5UIDQnNR0p87qI40m2op4Yjn814GYCzBelHVREQ/exec"; // <-- samma som på din sida (ändra vid behov)
-
-    // enkel lokal 'auth' (ej säker för produktion) — rekommendera server-side auth
+    const scriptURL = "https://script.google.com/macros/s/AKfycbyxk4u75C2XLGtZ5DZd_AefDeCjxGUD-JdoPSb4B--Xnp_vWtWx7V3oIk2g-DdX2zlO/exec"; // <-- samma som på din sida (ändra vid behov)
 
     // --- DOM helpers ---
     const adminAvailable = document.getElementById('adminAvailable');
@@ -271,10 +251,18 @@
 
 
     // --- ladda metadata ---
+    // --- ladda metadata ---
     async function loadMeta(){
       try{
-        const res = await fetch(scriptURL);
+        let url = scriptURL;
+        if(authToken){
+          url += `?action=meta&token=${encodeURIComponent(authToken)}`;
+        }
+
+        const res = await fetch(url);
         const data = await res.json();
+
+        // Fyll i data i gränssnittet
         adminAvailable.textContent = data.available ?? '0';
         adminPriceKokta.textContent = (data.pricePerKg?.kokta ?? '0') + ' kr';
         adminPriceLevande.textContent = (data.pricePerKg?.levande ?? '0') + ' kr';
@@ -283,7 +271,7 @@
         inputPriceKokta.value = data.pricePerKg?.kokta ?? 0;
         inputPriceLevande.value = data.pricePerKg?.levande ?? 0;
 
-        // om du sparar front-page-innehåll i ditt Sheet, fyll även frontTitle/text
+        // Eventuell frontdata
         if(data.front){
           frontTitle.value = data.front.title || '';
           frontText.value = data.front.text || '';
@@ -294,6 +282,7 @@
         metaResult.textContent = 'Fel vid hämtning av metadata.';
       }
     }
+
 
     // --- spara uppdaterad meta ---
     document.getElementById('saveMeta').addEventListener('click', async ()=>{
@@ -340,9 +329,9 @@
     // --- ORDERS ---
     async function loadOrders(){
       try{
-        const res = await fetch(scriptURL + '?action=orders');
+        const res = await fetch(`${scriptURL}?action=orders&token=${encodeURIComponent(authToken || '')}`);
         const arr = await res.json();
-        orders = Array.isArray(arr) ? arr : [];
+        orders = Array.isArray(arr) ? arr : (arr.orders || []);
         renderOrders();
       }catch(err){ console.error(err); }
     }
