@@ -36,7 +36,7 @@
 
     /* form styles */
     label{display:block; margin-top:8px; font-size:13px}
-    input[type="text"], input[type="number"], textarea, select{width:100%; padding:8px; margin-top:6px; border:1px solid #ddd; border-radius:6px}
+    input[type="text"], input[type="password"], input[type="number"], textarea, select{width:100%; padding:8px; margin-top:6px; border:1px solid #ddd; border-radius:6px}
     button{background:var(--accent); color:white; border:0; padding:10px 12px; border-radius:8px; cursor:pointer}
 
     /* orders table */
@@ -67,6 +67,19 @@
   </style>
 </head>
 <body>
+  <div id="loginScreen" style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; background:#891212; color:#fff;">
+    <div style="background:#fff; color:#000; padding:20px; border-radius:10px; width:300px; box-shadow:0 4px 12px rgba(0,0,0,0.3);">
+      <h2>Admin Login</h2>
+      <label>Användarnamn</label>
+      <input type="text" id="loginUser">
+      <label>Lösenord</label>
+      <input type="password" id="loginPass">
+      <button id="loginBtn" style="margin-top:12px; width:100%;">Logga in</button>
+      <p id="loginError" style="color:red; font-size:12px; display:none;">Fel användarnamn eller lösenord</p>
+    </div>
+  </div>
+  <div id="appContent" style="display:none;">
+
   <header>
     <img src="loggasimpelvit2.png" alt="logo">
     <h1>Admin — Olles & Maltes Fiske</h1>
@@ -194,20 +207,9 @@
      * så frontend pratar korrekt med ditt backend.
      *************************************************************************/
 
-    const scriptURL = "https://script.google.com/macros/s/AKfycbw7gx8Lv8grjtbcITS-J-bPbZqQMbcJLsC6LMGCOLk138lUy-R37UZIHOSC4GFYRdiOZQ/exec"; // <-- samma som på din sida (ändra vid behov)
+    const scriptURL = "https://script.google.com/macros/s/AKfycbw66YDDfZp11z_7aPCB98SL59pVYnY5UIDQnNR0p87qI40m2op4Yjn814GYCzBelHVREQ/exec"; // <-- samma som på din sida (ändra vid behov)
 
     // enkel lokal 'auth' (ej säker för produktion) — rekommendera server-side auth
-    const ADMIN_PASS_KEY = 'admin_auth_v1';
-
-    async function requireAuth(){
-      const ok = localStorage.getItem(ADMIN_PASS_KEY);
-      if(ok) return true;
-      const pw = prompt('Ange adminlösenord (lokal kontroll)');
-      if(!pw) return false;
-      // välj att spara token lokalt — för demo är detta ok. Byt mot riktig auth.
-      localStorage.setItem(ADMIN_PASS_KEY, btoa(pw));
-      return true;
-    }
 
     // --- DOM helpers ---
     const adminAvailable = document.getElementById('adminAvailable');
@@ -227,6 +229,32 @@
     const ordersTableBody = document.querySelector('#ordersTable tbody');
 
     let orders = [];
+
+
+    let authToken = null;
+
+    document.getElementById("loginBtn").addEventListener("click", async ()=>{
+      const username = document.getElementById("loginUser").value.trim();
+      const password = document.getElementById("loginPass").value.trim();
+      try {
+        const res = await fetch(scriptURL, { 
+          method:"POST", 
+          body: JSON.stringify({ action:"login", username, password }) 
+        });
+        const json = await res.json();
+        if(json.success){
+          authToken = json.token;
+          document.getElementById("loginScreen").style.display="none";
+          document.getElementById("appContent").style.display="block";
+          await init(); // starta appen
+        } else {
+          document.getElementById("loginError").style.display="block";
+        }
+      } catch(err){
+        console.error(err);
+        document.getElementById("loginError").style.display="block";
+      }
+    });
 
     // --- ladda metadata ---
     async function loadMeta(){
@@ -258,6 +286,7 @@
       if(!await requireAuth()) return alert('Fel lösenord eller avbrutet');
       const payload = {
         action: 'updateMeta',
+        token: authToken,
         available: parseFloat(inputAvailable.value) || 0,
         pricePerKg: { kokta: parseFloat(inputPriceKokta.value)||0, levande: parseFloat(inputPriceLevande.value)||0 }
       };
@@ -285,7 +314,7 @@
     document.getElementById('saveFront').addEventListener('click', async ()=>{
       if(!await requireAuth()) return alert('Fel lösenord eller avbrutet');
       frontResult.textContent = 'Sparar...';
-      const payload = { action: 'updateFront', front: { title: frontTitle.value, text: frontText.value } };
+      const payload = { action: 'updateFront', token: authToken, front: { title: frontTitle.value, text: frontText.value } };
       try{
         const res = await fetch(scriptURL, { method:'POST', body: JSON.stringify(payload) });
         const json = await res.json();
@@ -339,7 +368,7 @@
 
     async function updateOrderStatus(orderId, status){
       try{
-        const payload = { action: 'updateOrder', orderId, status };
+        const payload = { action: 'updateOrder', token: authToken, orderId, status };
         const res = await fetch(scriptURL, { method:'POST', body: JSON.stringify(payload) });
         const json = await res.json();
         if(json && json.success){
@@ -362,7 +391,7 @@
       const ids = orders.map(o=>o.id).slice(0,20); // EXEMPEL: du kan bygga checkboxar för valbara orders
       if(!ids.length) return alert('Inga orders att uppdatera');
       try{
-        const payload = { action: 'bulkUpdate', ids, status };
+        const payload = { action: 'bulkUpdate', token: authToken, ids, status };
         const res = await fetch(scriptURL, { method:'POST', body: JSON.stringify(payload) });
         const json = await res.json();
         if(json && json.success){ document.getElementById('quickResult').textContent = 'Bulk-uppdatering klar!'; await loadOrders(); }
@@ -392,7 +421,7 @@
       if(!subject || !body) return alert('Fyll i ämne och meddelande');
       document.getElementById('newsletterResult').textContent = 'Skickar...';
       try{
-        const payload = { action: 'sendNewsletter', subject, body };
+        const payload = { action: 'sendNewsletter', token: authToken, subject, body };
         const res = await fetch(scriptURL, { method:'POST', body: JSON.stringify(payload) });
         const json = await res.json();
         if(json && json.success){ document.getElementById('newsletterResult').textContent = 'Nyhetsbrev skickat.'; }
