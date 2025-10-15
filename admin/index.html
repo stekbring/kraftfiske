@@ -76,6 +76,7 @@
       <input type="password" id="loginPass">
       <button id="loginBtn" style="margin-top:12px; width:100%;">Logga in</button>
       <p id="loginError" style="color:red; font-size:12px; display:none;">Fel användarnamn eller lösenord</p>
+      <p id="loginLoading" style="color:#333; font-size:12px; display:none;">Loggar in...</p>
     </div>
   </div>
   <div id="appContent" style="display:none;">
@@ -236,25 +237,38 @@
     document.getElementById("loginBtn").addEventListener("click", async ()=>{
       const username = document.getElementById("loginUser").value.trim();
       const password = document.getElementById("loginPass").value.trim();
+      const loading = document.getElementById("loginLoading");
+      const error = document.getElementById("loginError");
+
+      // döljer felmeddelande och visar "loggar in..."
+      error.style.display = "none";
+      loading.style.display = "block";
+
       try {
         const res = await fetch(scriptURL, { 
           method:"POST", 
           body: JSON.stringify({ action:"login", username, password }) 
         });
         const json = await res.json();
+
+        // döljer laddtext
+        loading.style.display = "none";
+
         if(json.success){
           authToken = json.token;
           document.getElementById("loginScreen").style.display="none";
           document.getElementById("appContent").style.display="block";
           await init(); // starta appen
         } else {
-          document.getElementById("loginError").style.display="block";
+          error.style.display = "block";
         }
       } catch(err){
         console.error(err);
-        document.getElementById("loginError").style.display="block";
+        loading.style.display = "none";
+        error.style.display = "block";
       }
     });
+
 
     // --- ladda metadata ---
     async function loadMeta(){
