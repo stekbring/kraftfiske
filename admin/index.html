@@ -93,16 +93,16 @@
         <div class="card">
           <div class="stats">
             <div class="stat">
-              <h3>Tillgängliga kg</h3>
-              <p id="adminAvailable">—</p>
+              <h3>Tillgängligt</h3>
+              <p id="adminAvailable">— kg</p>
             </div>
             <div class="stat">
-              <h3>Pris / kg (kokta)</h3>
-              <p id="adminPriceKokta">— kr</p>
+              <h3>Kokta</h3>
+              <p id="adminPriceKokta">— kr/kg</p>
             </div>
             <div class="stat">
-              <h3>Pris / kg (levande)</h3>
-              <p id="adminPriceLevande">— kr</p>
+              <h3>Levande</h3>
+              <p id="adminPriceLevande">— kr/kg</p>
             </div>
           </div>
 
@@ -128,69 +128,14 @@
           </form>
 
           <hr style="margin:14px 0">
-
-          <h3>Huvudsida — Snabbredigering</h3>
-          <label>Rubrik (om-del)</label>
-          <input type="text" id="frontTitle">
-          <label>Text — kort (om-del)</label>
-          <textarea id="frontText" rows="4"></textarea>
-          <div style="display:flex; gap:8px; margin-top:8px">
-            <button id="saveFront">Spara innehåll</button>
-          </div>
-          <p id="frontResult" class="small muted"></p>
         </div>
-
-        <div class="card" style="margin-top:12px">
-          <h3>Skicka nyhetsbrev</h3>
-          <p class="small muted">Använd ditt befintliga Apps Script för att skicka till alla i listan.</p>
-          <label>Ämne</label>
-          <input type="text" id="newsletterSubject" placeholder="Rubrik i mailet">
-          <label>Meddelande</label>
-          <textarea id="newsletterBody" rows="6"></textarea>
-          <div style="display:flex; gap:8px; margin-top:8px">
-            <button id="previewNewsletter">Förhandsgranska</button>
-            <button id="sendNewsletter">Skicka nu</button>
-          </div>
-          <p id="newsletterResult" class="small muted"></p>
-        </div>
-
       </div>
-
-      <aside class="right-col">
-        <div class="card">
-          <h3>Beställningar</h3>
-          <p class="small muted">Ladda beställningar nedan, ändra leveransstatus och spara.</p>
-          <div style="display:flex; gap:8px; margin-top:8px">
-            <button id="refreshOrders">Ladda</button>
-            <button id="exportCsv">Exportera CSV</button>
-          </div>
-
-          <div style="margin-top:12px; overflow:auto; max-height:520px">
-            <table id="ordersTable">
-              <thead><tr><th>#</th><th>Namn</th><th>Kontakt</th><th>Kg</th><th>Typ</th><th>Status</th><th></th></tr></thead>
-              <tbody></tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="card">
-          <h3>Snabbåtgärder</h3>
-          <p class="small muted">Välj och markera beställningar som skickade, avbokade eller återbetalda.</p>
-          <div style="display:flex; gap:8px; margin-top:8px">
-            <button id="markSent">Markera som skickad</button>
-            <button id="markCancelled">Avboka</button>
-            <button id="markRefund">Återbetala</button>
-          </div>
-          <p id="quickResult" class="small muted"></p>
-        </div>
-
-      </aside>
     </div>
   </div>
 
   <script>
 
-    const scriptURL = "https://script.google.com/macros/s/AKfycbyxk4u75C2XLGtZ5DZd_AefDeCjxGUD-JdoPSb4B--Xnp_vWtWx7V3oIk2g-DdX2zlO/exec"; // <-- samma som på din sida (ändra vid behov)
+    const scriptURL = "https://script.google.com/macros/s/AKfycbzNzzYjALeQgrBM1jGxenPgw0QpvdBYpAC6sEsGDKLO7qERTcQzwbXE0ZQwrcnAig_-tg/exec"; // <-- samma som på din sida (ändra vid behov)
 
     // --- DOM helpers ---
     const adminAvailable = document.getElementById('adminAvailable');
@@ -213,6 +158,87 @@
 
 
     let authToken = null;
+
+    async function init(){
+      await loadMeta();
+    }
+
+    async function loadMeta(){
+      try {
+        const res = await fetch(scriptURL, {
+          method: "POST",
+          body: JSON.stringify({ action: "getMeta", token: authToken })
+        });
+        const json = await res.json();
+        if(json.success){
+          adminAvailable.textContent = json.available + " kg";
+          adminPriceKokta.textContent = json.prices.kokta + " kr/kg";
+          adminPriceLevande.textContent = json.prices.levande + " kr/kg";
+
+          inputAvailable.value = json.available;
+          inputPriceKokta.value = json.prices.kokta;
+          inputPriceLevande.value = json.prices.levande;
+        } else {
+          metaResult.textContent = "Kunde inte hämta data.";
+        }
+      } catch(err){
+        console.error(err);
+        metaResult.textContent = "Fel vid laddning.";
+      }
+    }
+
+    // --- SPARA ---
+    document.getElementById("saveMeta").addEventListener("click", async ()=>{
+      const available = parseFloat(inputAvailable.value);
+      const priceKokta = parseFloat(inputPriceKokta.value);
+      const priceLevande = parseFloat(inputPriceLevande.value);
+
+      metaResult.textContent = "Sparar...";
+
+      try {
+        const res = await fetch(scriptURL, {
+          method: "POST",
+          body: JSON.stringify({
+            action: "updateMeta",
+            token: authToken,
+            available,
+            priceKokta,
+            priceLevande
+          })
+        });
+        const json = await res.json();
+        if(json.success){
+          metaResult.textContent = "Uppdaterat!";
+          await loadMeta();
+        } else {
+          metaResult.textContent = "Fel: " + (json.error || "Okänt");
+        }
+      } catch(err){
+        console.error(err);
+        metaResult.textContent = "Fel vid uppdatering.";
+      }
+    });
+
+    // --- SÄTT SLUT ---
+    document.getElementById("setSoldOut").addEventListener("click", async ()=>{
+      if(!confirm("Sätt tillgänglighet till 0 kg?")) return;
+      metaResult.textContent = "Uppdaterar...";
+
+      const res = await fetch(scriptURL, {
+        method:"POST",
+        body: JSON.stringify({ action:"setSoldOut", token:authToken })
+      });
+      const json = await res.json();
+      if(json.success){
+        await loadMeta();
+        metaResult.textContent = "Markerat som SLUT!";
+      } else {
+        metaResult.textContent = "Fel: " + (json.error || "Okänt");
+      }
+    });
+
+
+
 
     document.getElementById("loginBtn").addEventListener("click", async ()=>{
       const username = document.getElementById("loginUser").value.trim();
@@ -249,202 +275,11 @@
       }
     });
 
-
-    // --- ladda metadata ---
-    // --- ladda metadata ---
-    async function loadMeta(){
-      try{
-        let url = scriptURL;
-        if(authToken){
-          url += `?action=meta&token=${encodeURIComponent(authToken)}`;
-        }
-
-        const res = await fetch(url);
-        const data = await res.json();
-
-        // Fyll i data i gränssnittet
-        adminAvailable.textContent = data.available ?? '0';
-        adminPriceKokta.textContent = (data.pricePerKg?.kokta ?? '0') + ' kr';
-        adminPriceLevande.textContent = (data.pricePerKg?.levande ?? '0') + ' kr';
-
-        inputAvailable.value = data.available ?? 0;
-        inputPriceKokta.value = data.pricePerKg?.kokta ?? 0;
-        inputPriceLevande.value = data.pricePerKg?.levande ?? 0;
-
-        // Eventuell frontdata
-        if(data.front){
-          frontTitle.value = data.front.title || '';
-          frontText.value = data.front.text || '';
-        }
-
-      }catch(err){
-        console.error('Kunde inte ladda meta', err);
-        metaResult.textContent = 'Fel vid hämtning av metadata.';
-      }
-    }
-
-
-    // --- spara uppdaterad meta ---
-    document.getElementById('saveMeta').addEventListener('click', async ()=>{
-      if(!await requireAuth()) return alert('Fel lösenord eller avbrutet');
-      const payload = {
-        action: 'updateMeta',
-        token: authToken,
-        available: parseFloat(inputAvailable.value) || 0,
-        pricePerKg: { kokta: parseFloat(inputPriceKokta.value)||0, levande: parseFloat(inputPriceLevande.value)||0 }
-      };
-      metaResult.textContent = 'Sparar...';
-      try{
-        const res = await fetch(scriptURL, { method:'POST', body: JSON.stringify(payload) });
-        const json = await res.json();
-        if(json && json.success){
-          metaResult.textContent = 'Sparat!';
-          await loadMeta();
-        } else {
-          metaResult.textContent = 'Kunde inte spara. Kontrollera scriptet.';
-        }
-      }catch(err){ console.error(err); metaResult.textContent = 'Fel vid sparande.' }
-    });
-
-    // sätt slut
-    document.getElementById('setSoldOut').addEventListener('click', async ()=>{
-      if(!await requireAuth()) return alert('Fel lösenord eller avbrutet');
-      inputAvailable.value = 0; document.getElementById('resetSoldOut').style.display='inline-block';
-    });
-    document.getElementById('resetSoldOut').addEventListener('click', ()=>{ inputAvailable.value = '' ; document.getElementById('resetSoldOut').style.display='none'; });
-
-    // --- front page save ---
-    document.getElementById('saveFront').addEventListener('click', async ()=>{
-      if(!await requireAuth()) return alert('Fel lösenord eller avbrutet');
-      frontResult.textContent = 'Sparar...';
-      const payload = { action: 'updateFront', token: authToken, front: { title: frontTitle.value, text: frontText.value } };
-      try{
-        const res = await fetch(scriptURL, { method:'POST', body: JSON.stringify(payload) });
-        const json = await res.json();
-        if(json && json.success){ frontResult.textContent = 'Sparat!'; }
-        else frontResult.textContent = 'Kunde inte spara innehåll.';
-      }catch(err){ console.error(err); frontResult.textContent='Fel vid sparande'; }
-    });
-
-    // --- ORDERS ---
-    async function loadOrders(){
-      try{
-        const res = await fetch(`${scriptURL}?action=orders&token=${encodeURIComponent(authToken || '')}`);
-        const arr = await res.json();
-        orders = Array.isArray(arr) ? arr : (arr.orders || []);
-        renderOrders();
-      }catch(err){ console.error(err); }
-    }
-
-    function renderOrders(){
-      ordersTableBody.innerHTML='';
-      orders.forEach((o, i)=>{
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${i+1}</td>
-          <td>${escapeHtml(o.name||'')}</td>
-          <td class="small">${escapeHtml(o.phone||'')}<br>${escapeHtml(o.email||'')}</td>
-          <td>${o.amount ?? ''}</td>
-          <td>${escapeHtml(o.type||'')}</td>
-          <td>
-            <select data-order-id="${o.id || i}" class="status-select">
-              <option value="pending" ${o.status==='pending'?'selected':''}>Pending</option>
-              <option value="confirmed" ${o.status==='confirmed'?'selected':''}>Bekräftad</option>
-              <option value="sent" ${o.status==='sent'?'selected':''}>Skickad</option>
-              <option value="cancelled" ${o.status==='cancelled'?'selected':''}>Avbokad</option>
-            </select>
-          </td>
-          <td><button data-order-id="${o.id || i}" class="save-order">Spara</button></td>`;
-        ordersTableBody.appendChild(tr);
-      });
-
-      // attach save handlers
-      document.querySelectorAll('.save-order').forEach(btn=>{
-        btn.addEventListener('click', async (e)=>{
-          if(!await requireAuth()) return alert('Fel lösenord eller avbrutet');
-          const id = e.target.dataset.orderId;
-          const sel = e.target.closest('tr').querySelector('select');
-          const status = sel.value;
-          await updateOrderStatus(id, status);
-        });
-      });
-    }
-
-    async function updateOrderStatus(orderId, status){
-      try{
-        const payload = { action: 'updateOrder', token: authToken, orderId, status };
-        const res = await fetch(scriptURL, { method:'POST', body: JSON.stringify(payload) });
-        const json = await res.json();
-        if(json && json.success){
-          document.getElementById('quickResult').textContent = 'Order uppdaterad.';
-          await loadOrders();
-        } else {
-          document.getElementById('quickResult').textContent = 'Kunde inte uppdatera order.';
-        }
-      }catch(err){ console.error(err); document.getElementById('quickResult').textContent='Fel vid uppdatering'; }
-    }
-
-    // --- quick actions for multiple selected orders ---
-    document.getElementById('markSent').addEventListener('click', async ()=>{ await bulkUpdateStatus('sent'); });
-    document.getElementById('markCancelled').addEventListener('click', async ()=>{ await bulkUpdateStatus('cancelled'); });
-    document.getElementById('markRefund').addEventListener('click', async ()=>{ await bulkUpdateStatus('refunded'); });
-
-    async function bulkUpdateStatus(status){
-      if(!await requireAuth()) return alert('Fel lösenord eller avbrutet');
-      // i denna demo: markera de synliga orders som inte already have status
-      const ids = orders.map(o=>o.id).slice(0,20); // EXEMPEL: du kan bygga checkboxar för valbara orders
-      if(!ids.length) return alert('Inga orders att uppdatera');
-      try{
-        const payload = { action: 'bulkUpdate', token: authToken, ids, status };
-        const res = await fetch(scriptURL, { method:'POST', body: JSON.stringify(payload) });
-        const json = await res.json();
-        if(json && json.success){ document.getElementById('quickResult').textContent = 'Bulk-uppdatering klar!'; await loadOrders(); }
-        else document.getElementById('quickResult').textContent = 'Kunde inte bulk-uppdatera.';
-      }catch(err){ console.error(err); document.getElementById('quickResult').textContent='Fel vid bulk-uppdatering'; }
-    }
-
-    // exportera CSV (enkelt klient-side)
-    document.getElementById('exportCsv').addEventListener('click', ()=>{
-      if(!orders.length) return alert('Inga orders att exportera');
-      const headers = ['id','name','phone','email','amount','type','status'];
-      const rows = orders.map(o=>headers.map(h=>`"${(o[h]||'').toString().replace(/"/g,'""')}"`).join(','));
-      const csv = [headers.join(','), ...rows].join('\n');
-      const blob = new Blob([csv], {type:'text/csv'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = 'orders.csv'; a.click();
-      URL.revokeObjectURL(url);
-    });
-
-    document.getElementById('refreshOrders').addEventListener('click', loadOrders);
-
-    // --- NEWSLETTER ---
-    document.getElementById('sendNewsletter').addEventListener('click', async ()=>{
-      if(!await requireAuth()) return alert('Fel lösenord eller avbrutet');
-      const subject = document.getElementById('newsletterSubject').value.trim();
-      const body = document.getElementById('newsletterBody').value.trim();
-      if(!subject || !body) return alert('Fyll i ämne och meddelande');
-      document.getElementById('newsletterResult').textContent = 'Skickar...';
-      try{
-        const payload = { action: 'sendNewsletter', token: authToken, subject, body };
-        const res = await fetch(scriptURL, { method:'POST', body: JSON.stringify(payload) });
-        const json = await res.json();
-        if(json && json.success){ document.getElementById('newsletterResult').textContent = 'Nyhetsbrev skickat.'; }
-        else document.getElementById('newsletterResult').textContent = 'Kunde inte skicka.';
-      }catch(err){ console.error(err); document.getElementById('newsletterResult').textContent='Fel vid utskick'; }
-    });
-
-    document.getElementById('previewNewsletter').addEventListener('click', ()=>{
-      const s = document.getElementById('newsletterSubject').value;
-      const b = document.getElementById('newsletterBody').value;
-      const w = window.open('', '_blank', 'width=600,height=600');
-      w.document.write(`<h2>${escapeHtml(s)}</h2><div>${escapeHtml(b).replace(/\n/g,'<br>')}</div>`);
-    });
-
     // small helpers
     function escapeHtml(str){ if(!str) return ''; return String(str).replace(/[&<>"']/g, function(m){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"})[m]; }); }
     document.getElementById("year").textContent = new Date().getFullYear();
     // init
     (async function init(){
-      await loadMeta();
       await loadOrders();
     })();
   </script>
