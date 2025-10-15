@@ -36,7 +36,7 @@
 
     /* form styles */
     label{display:block; margin-top:8px; font-size:13px}
-    input[type="text"], input[type="password"], input[type="number"], textarea, select{width:100%; padding:8px; margin-top:6px; border:1px solid #ddd; border-radius:6px}
+    input[type="text"], input[type="password"], input[type="number"], textarea, select{font-size: 16px; width:100%; padding:8px; margin-top:6px; border:1px solid #ddd; border-radius:6px}
     button{background:var(--accent); color:white; border:0; padding:10px 12px; border-radius:8px; cursor:pointer}
 
     /* orders table */
@@ -48,6 +48,30 @@
     /* right column */
     .right-col{display:flex; flex-direction:column; gap:12px}
 
+    /* Gör inputrutorna för pris/tillgång på samma rad */
+    .meta-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    .meta-item {
+      flex: 1;
+      min-width: 110px;
+    }
+    .meta-item label {
+      font-size: 13px;
+    }
+    .meta-item input {
+      width: 100%;
+    }
+
+    @media (max-width: 600px) {
+      .meta-row {
+        flex-direction: column;
+      }
+    }
+
     /* responsive */
     @media (max-width:900px){
       .grid{grid-template-columns: 1fr;}
@@ -58,6 +82,12 @@
     @media (max-width:480px){
       header img{height:48px}
       header h1{font-size:18px}
+    }
+    .stat p {
+      font-size: 16px;
+    }
+    .stat h3 {
+      font-size: 12px;
     }
 
     /* small helper styles */
@@ -74,7 +104,7 @@
       <label>Användarnamn</label>
       <input type="text" id="loginUser">
       <label>Lösenord</label>
-      <input type="password" id="loginPass">
+      <input type="password" id="loginPass" onkeydown="if(event.key==='Enter') document.getElementById('loginBtn').click();">
       <button id="loginBtn" style="margin-top:12px; width:100%;">Logga in</button>
       <p id="loginError" style="color:red; font-size:12px; display:none;">Fel användarnamn eller lösenord</p>
       <p id="loginLoading" style="color:#333; font-size:12px; display:none;">Loggar in...</p>
@@ -110,15 +140,20 @@
 
           <h3>Uppdatera lager & pris</h3>
           <form id="metaForm">
-            <label>Antal tillgängliga (kg)</label>
-            <input type="number" step="0.5" id="inputAvailable" min="0">
-
-            <label>Pris kokta (kr / kg)</label>
-            <input type="number" step="1" id="inputPriceKokta" min="0">
-
-            <label>Pris levande (kr / kg)</label>
-            <input type="number" step="1" id="inputPriceLevande" min="0">
-
+            <div class="meta-row">
+              <div class="meta-item">
+                <label>Tillgängligt (kg)</label>
+                <input type="number" step="0.5" id="inputAvailable" min="0">
+              </div>
+              <div class="meta-item">
+                <label>Kokta (kr/kg)</label>
+                <input type="number" step="1" id="inputPriceKokta" min="0">
+              </div>
+              <div class="meta-item">
+                <label>Levande (kr/kg)</label>
+                <input type="number" step="1" id="inputPriceLevande" min="0">
+              </div>
+            </div>
             <div style="display:flex; gap:8px; margin-top:10px">
               <button type="button" id="saveMeta">Spara</button>
               <button type="button" id="setSoldOut">Sätt som SLUT</button>
