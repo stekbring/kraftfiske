@@ -2,7 +2,7 @@
 <html lang="sv">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>Admin - Olles Fiske</title>
   <link rel="icon" type="image/png" href="loggasimpelvit.ico">
   <style>
@@ -66,9 +66,61 @@
       width: 100%;
     }
 
+    .status-btn {
+      padding: 4px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      border: none;
+      font-size: 12px;
+      color: #fff;
+    }
+    .status-btn.green {
+      background: #28a745;
+    }
+    .status-btn.red {
+      background: #d33;
+    }
+    .status-btn:hover {
+      opacity: 0.8;
+    }
+    .card {
+      overflow-x: auto;  /* scrolla horisontellt om det behövs */
+      width: 98%;
+    }
+
+    #ordersTable {
+      width: 98%;
+      border-collapse: collapse;
+      table-layout: auto; /* låter kolumnerna anpassa sig */
+      min-width: unset;   /* ta bort min-width som tvingar bredd */
+    }
+    /* sorteringspilar */
+    th.sortable::after {
+      content: " ";          /* default tomt */
+      margin-left: 6px;
+      font-size: 10px;
+    }
+
+    th.sortable.asc::after {
+      content: "▲";
+    }
+
+    th.sortable.desc::after {
+      content: "▼";
+    }
+
     @media (max-width: 600px) {
       .meta-row {
         flex-direction: column;
+      }
+      .wrap {
+        width: 98%;
+      }
+      table {
+        font-size: 12px;
+      }
+      th, td {
+        padding: 6px;
       }
     }
 
@@ -163,6 +215,32 @@
           </form>
 
           <hr style="margin:14px 0">
+
+          </div> <!-- stänger första carden -->
+
+          <div class="card" style="margin-top:18px;">
+            <h3>Beställningar</h3>
+            <div id="ordersSummary" class="small muted" style="margin-bottom:10px;">
+              Totalt: — kg (≈ — kräftor) — — kr
+            </div>
+
+            <table id="ordersTable">
+              <thead>
+                <tr>
+                  <th>Datum</th>
+                  <th>Namn</th>
+                  <th>Typ</th>
+                  <th>Kg</th>
+                  <th>Summa (kr)</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+            <p id="ordersResult" class="small muted"></p>
+          </div>
+
+
         </div>
       </div>
     </div>
@@ -170,7 +248,7 @@
 
   <script>
 
-    const scriptURL = "https://script.google.com/macros/s/AKfycbzNzzYjALeQgrBM1jGxenPgw0QpvdBYpAC6sEsGDKLO7qERTcQzwbXE0ZQwrcnAig_-tg/exec"; // <-- samma som på din sida (ändra vid behov)
+    const scriptURL = "https://script.google.com/macros/s/AKfycbx64nZCG3aUAIqgqTtrp3XhYKjKdD8lQA1uj4k1cweXEnqxPRkoZzJ6Z09fh1eg4lhyxQ/exec"; // <-- samma som på din sida (ändra vid behov)
 
     // --- DOM helpers ---
     const adminAvailable = document.getElementById('adminAvailable');
@@ -196,6 +274,7 @@
 
     async function init(){
       await loadMeta();
+      await loadOrders();
     }
 
     async function loadMeta(){
@@ -312,11 +391,134 @@
 
     // small helpers
     function escapeHtml(str){ if(!str) return ''; return String(str).replace(/[&<>"']/g, function(m){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"})[m]; }); }
+    
+    async function loadOrders() {
+      try {
+        const res = await fetch(scriptURL, {
+          method: "POST",
+          body: JSON.stringify({ action: "getOrders", token: authToken })
+        });
+        const json = await res.json();
+
+        if (json.success) {
+          // konverterar levererad till bool korrekt
+          orders = json.orders.map(o => ({
+          ...o,
+          delivered: o.delivered === true || (o.delivered || "").toString().toLowerCase() === "levererad"
+        }));
+          renderOrders(orders);
+        } else {
+          document.getElementById("ordersResult").textContent = "Kunde inte hämta beställningar.";
+        }
+      } catch (err) {
+        console.error(err);
+        document.getElementById("ordersResult").textContent = "Fel vid laddning av beställningar.";
+      }
+    }
+
+    // --- sorteringslogik ---
+    let currentSort = { key: "timestamp", asc: false };
+
+    function renderOrders(data) {
+      const tbody = document.querySelector("#ordersTable tbody");
+      tbody.innerHTML = "";
+      let totalKg = 0, totalKr = 0;
+
+      data.forEach(order => {
+        const tr = document.createElement("tr");
+        const statusColor = order.delivered ? "green" : "red";
+        const statusText = order.delivered ? "Levererad" : "Ej levererad";
+
+        totalKg += parseFloat(order.kg);
+        totalKr += parseFloat(order.total);
+
+        tr.innerHTML = `
+          <td>${escapeHtml(order.timestamp)}</td>
+          <td>${escapeHtml(order.name)}</td>
+          <td>${escapeHtml(order.type)}</td>
+          <td>${order.kg}</td>
+          <td>${order.total}</td>
+          <td>
+            <button class="status-btn ${statusColor}" data-id="${order.id}" data-status="${order.delivered}">
+              ${statusText}
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      const totalKraftor = Math.round(totalKg * 20);
+      document.getElementById("ordersSummary").innerHTML = `
+        Totalt: <strong>${totalKg.toFixed(1)} kg</strong> (≈ ${totalKraftor} kräftor) — 
+        <strong>${totalKr.toFixed(0)} kr</strong>
+      `;
+
+      // Direkt uppdatering av status
+      document.querySelectorAll(".status-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const id = btn.dataset.id;
+          const current = btn.dataset.status === "true";
+          const newStatus = !current;
+
+          // Uppdatera UI direkt
+          btn.textContent = newStatus ? "Levererad" : "Ej levererad";
+          btn.classList.toggle("green", newStatus);
+          btn.classList.toggle("red", !newStatus);
+          btn.dataset.status = newStatus;
+
+          try {
+            await fetch(scriptURL, {
+              method: "POST",
+              body: JSON.stringify({ action: "updateOrderStatus", token: authToken, id, delivered: newStatus })
+            });
+          } catch(err) {
+            console.error(err);
+            // Om det blir fel, återställ knapp
+            btn.textContent = current ? "Levererad" : "Ej levererad";
+            btn.classList.toggle("green", current);
+            btn.classList.toggle("red", !current);
+            btn.dataset.status = current;
+          }
+        });
+      });
+
+      // lägg till klickbar sortering med pilar
+      const headers = document.querySelectorAll("#ordersTable thead th");
+      headers.forEach((th, i) => {
+        const keys = ["timestamp","name","type","kg","total","delivered"];
+        const key = keys[i];
+
+        // markera som sorteringsbar
+        th.classList.add("sortable");
+        th.style.cursor = "pointer";
+
+        th.onclick = () => {
+          // växla sortering
+          if (currentSort.key === key) currentSort.asc = !currentSort.asc;
+          else currentSort = { key, asc: true };
+
+          // sortera data
+          const sorted = [...orders].sort((a,b)=>{
+            let av=a[key], bv=b[key];
+            if(key==="kg"||key==="total") {av=parseFloat(av);bv=parseFloat(bv);}
+            if(key==="timestamp") {av=new Date(av);bv=new Date(bv);}
+            if(av<bv) return currentSort.asc?-1:1;
+            if(av>bv) return currentSort.asc?1:-1;
+            return 0;
+          });
+
+          // uppdatera pilar
+          headers.forEach(h=>h.classList.remove("asc","desc"));
+          th.classList.add(currentSort.asc?"asc":"desc");
+
+          renderOrders(sorted);
+        };
+      });
+
+    }
+
     document.getElementById("year").textContent = new Date().getFullYear();
-    // init
-    (async function init(){
-      await loadOrders();
-    })();
+
   </script>
 
   <footer style="text-align:center; padding:18px; color:#fff; background:var(--header); margin-top:26px">&copy; <span id="year"></span> Olles & Maltes Fiske</footer>
