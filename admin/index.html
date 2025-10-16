@@ -127,7 +127,15 @@
     /* responsive */
     @media (max-width:900px){
       .grid{grid-template-columns: 1fr;}
-      header{flex-direction:column; align-items:flex-start}
+      header{
+        flex-direction:column; 
+        align-items:flex-start;
+        align-items: center;    /* ändra från flex-start till center */
+        text-align: center;
+      }
+      header h1 {
+      margin-top: 8px; /* lite mellanrum under loggan */
+      }
     }
 
     /* mobile tweaks */
@@ -166,7 +174,7 @@
 
   <header>
     <img src="loggasimpelvit2.png" alt="logo">
-    <h1>Admin — Olles & Maltes Fiske</h1>
+    <h1>Adminpanel</h1>
   </header>
 
   <div class="wrap">
@@ -221,7 +229,7 @@
           <div class="card" style="margin-top:18px;">
             <h3>Beställningar</h3>
             <div id="ordersSummary" class="small muted" style="margin-bottom:10px;">
-              Totalt: — kg (≈ — kräftor) — — kr
+              Totalt: — kg  ≈ — kräftor  -  — kr
             </div>
 
             <table id="ordersTable">
@@ -408,7 +416,7 @@
         }));
 
           orders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-          
+
           renderOrders(orders);
         } else {
           document.getElementById("ordersResult").textContent = "Kunde inte hämta beställningar.";
@@ -438,7 +446,7 @@
       // 🔹 Uppdatera totalsammanfattning
       document.getElementById("ordersSummary").innerHTML = `
         Totalt: <strong>${totalKg.toFixed(1)} kg</strong> 
-        (≈ ${totalKraftor} kräftor) — 
+         ≈ ${totalKraftor} kräftor  -   
         <strong>${totalKr.toFixed(0)} kr</strong>
       `;
 
@@ -551,13 +559,16 @@
         };
       });
     }
-
-
-
-    document.getElementById("year").textContent = new Date().getFullYear();
+    
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("year").textContent = new Date().getFullYear();
+    });
 
   </script>
 
-  <footer style="text-align:center; padding:18px; color:#fff; background:var(--header); margin-top:26px">&copy; <span id="year"></span> Olles & Maltes Fiske</footer>
+  <footer style="text-align:center; padding:18px; color:#fff; background:var(--header); margin-top:26px">
+    &copy; <span id="year"></span> Olles & Maltes Fiske
+  </footer>
+
 </body>
 </html>
