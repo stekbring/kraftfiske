@@ -460,24 +460,44 @@
           const current = btn.dataset.status === "true";
           const newStatus = !current;
 
-          // Uppdatera UI direkt
-          btn.textContent = newStatus ? "Levererad" : "Ej levererad";
-          btn.classList.toggle("green", newStatus);
-          btn.classList.toggle("red", !newStatus);
-          btn.dataset.status = newStatus;
+          // Visa "Sparar..."
+          const originalText = btn.textContent;
+          btn.textContent = "Sparar...";
+          btn.disabled = true;
 
           try {
-            await fetch(scriptURL, {
+            const res = await fetch(scriptURL, {
               method: "POST",
-              body: JSON.stringify({ action: "updateOrderStatus", token: authToken, id, delivered: newStatus })
+              body: JSON.stringify({
+                action: "updateOrderStatus",
+                token: authToken,
+                id,
+                delivered: newStatus
+              })
             });
-          } catch(err) {
+
+            const json = await res.json();
+
+            if (json.success) {
+              // Uppdatera knappen
+              btn.textContent = newStatus ? "Levererad" : "Ej levererad";
+              btn.classList.toggle("green", newStatus);
+              btn.classList.toggle("red", !newStatus);
+              btn.dataset.status = newStatus;
+
+              // Uppdatera lokalt i minnet så statusen bevaras vid sortering
+              const orderIndex = orders.findIndex(o => o.id == id);
+              if (orderIndex !== -1) orders[orderIndex].delivered = newStatus;
+            } else {
+              btn.textContent = "Fel!";
+              setTimeout(() => { btn.textContent = originalText; }, 1000);
+            }
+          } catch (err) {
             console.error(err);
-            // Om det blir fel, återställ knapp
-            btn.textContent = current ? "Levererad" : "Ej levererad";
-            btn.classList.toggle("green", current);
-            btn.classList.toggle("red", !current);
-            btn.dataset.status = current;
+            btn.textContent = "Fel vid sparning";
+            setTimeout(() => { btn.textContent = originalText; }, 1500);
+          } finally {
+            btn.disabled = false;
           }
         });
       });
