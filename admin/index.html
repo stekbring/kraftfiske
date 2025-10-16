@@ -425,7 +425,7 @@
       tbody.innerHTML = "";
 
       // 🔹 Visa antingen 10 första eller alla
-      const displayed = showAllOrders ? data : data.slice(0, 10);
+      const displayed = showAllOrders ? data : data.slice(0, 6);
 
       // 🔹 Summera alltid ALLA orders (inte bara visade)
       const totalKg = orders.reduce((sum, o) => sum + parseFloat(o.kg), 0);
