@@ -85,11 +85,11 @@
     }
     .card {
       overflow-x: auto;  /* scrolla horisontellt om det behövs */
-      width: 98%;
+      width: 100%;
     }
 
     #ordersTable {
-      width: 98%;
+      width: 100%;
       border-collapse: collapse;
       table-layout: auto; /* låter kolumnerna anpassa sig */
       min-width: unset;   /* ta bort min-width som tvingar bredd */
@@ -114,7 +114,7 @@
         flex-direction: column;
       }
       .wrap {
-        width: 98%;
+        width: 100%;
       }
       table {
         font-size: 12px;
@@ -418,13 +418,27 @@
 
     // --- sorteringslogik ---
     let currentSort = { key: "timestamp", asc: false };
+    let showAllOrders = false; // visar max 10 först
 
     function renderOrders(data) {
       const tbody = document.querySelector("#ordersTable tbody");
       tbody.innerHTML = "";
       let totalKg = 0, totalKr = 0;
 
-      data.forEach(order => {
+      // sortera alltid enligt nuvarande sorteringsinställning
+      const sortedData = [...data].sort((a,b)=>{
+        let av=a[currentSort.key], bv=b[currentSort.key];
+        if(currentSort.key==="kg"||currentSort.key==="total"){av=parseFloat(av);bv=parseFloat(bv);}
+        if(currentSort.key==="timestamp"){av=new Date(av);bv=new Date(bv);}
+        if(av<bv) return currentSort.asc?-1:1;
+        if(av>bv) return currentSort.asc?1:-1;
+        return 0;
+      });
+
+      // visa max 10 om inte showAllOrders är aktivt
+      const visibleData = showAllOrders ? sortedData : sortedData.slice(0, 6);
+
+      visibleData.forEach(order => {
         const tr = document.createElement("tr");
         const statusColor = order.delivered ? "green" : "red";
         const statusText = order.delivered ? "Levererad" : "Ej levererad";
@@ -432,8 +446,11 @@
         totalKg += parseFloat(order.kg);
         totalKr += parseFloat(order.total);
 
+        // formatera tid: ta bort sekunder
+        const formattedTime = order.timestamp.replace(/:\d{2}(?=$| )/, "");
+
         tr.innerHTML = `
-          <td>${escapeHtml(order.timestamp)}</td>
+          <td>${escapeHtml(formattedTime)}</td>
           <td>${escapeHtml(order.name)}</td>
           <td>${escapeHtml(order.type)}</td>
           <td>${order.kg}</td>
@@ -453,14 +470,35 @@
         <strong>${totalKr.toFixed(0)} kr</strong>
       `;
 
-      // Direkt uppdatering av status
+      // --- visa/visa mindre-knapp ---
+      let toggleBtn = document.getElementById("toggleOrdersBtn");
+      if (!toggleBtn) {
+        toggleBtn = document.createElement("button");
+        toggleBtn.id = "toggleOrdersBtn";
+        toggleBtn.style.marginTop = "10px";
+        toggleBtn.style.display = "block";
+        toggleBtn.style.width = "100%";
+        toggleBtn.style.background = "var(--accent)";
+        toggleBtn.style.color = "white";
+        toggleBtn.style.borderRadius = "6px";
+        toggleBtn.style.padding = "6px 10px";
+        toggleBtn.style.border = "none";
+        toggleBtn.style.cursor = "pointer";
+        document.querySelector(".card:last-of-type").appendChild(toggleBtn);
+      }
+      toggleBtn.textContent = showAllOrders ? "Visa färre" : "Visa alla";
+      toggleBtn.onclick = () => {
+        showAllOrders = !showAllOrders;
+        renderOrders(orders);
+      };
+
+      // --- uppdatering av statusknappar ---
       document.querySelectorAll(".status-btn").forEach(btn => {
         btn.addEventListener("click", async () => {
           const id = btn.dataset.id;
           const current = btn.dataset.status === "true";
           const newStatus = !current;
 
-          // Visa "Sparar..."
           const originalText = btn.textContent;
           btn.textContent = "Sparar...";
           btn.disabled = true;
@@ -479,13 +517,10 @@
             const json = await res.json();
 
             if (json.success) {
-              // Uppdatera knappen
               btn.textContent = newStatus ? "Levererad" : "Ej levererad";
               btn.classList.toggle("green", newStatus);
               btn.classList.toggle("red", !newStatus);
               btn.dataset.status = newStatus;
-
-              // Uppdatera lokalt i minnet så statusen bevaras vid sortering
               const orderIndex = orders.findIndex(o => o.id == id);
               if (orderIndex !== -1) orders[orderIndex].delivered = newStatus;
             } else {
@@ -502,40 +537,24 @@
         });
       });
 
-      // lägg till klickbar sortering med pilar
+      // --- sorteringspilar ---
       const headers = document.querySelectorAll("#ordersTable thead th");
       headers.forEach((th, i) => {
         const keys = ["timestamp","name","type","kg","total","delivered"];
         const key = keys[i];
-
-        // markera som sorteringsbar
         th.classList.add("sortable");
         th.style.cursor = "pointer";
 
         th.onclick = () => {
-          // växla sortering
           if (currentSort.key === key) currentSort.asc = !currentSort.asc;
           else currentSort = { key, asc: true };
-
-          // sortera data
-          const sorted = [...orders].sort((a,b)=>{
-            let av=a[key], bv=b[key];
-            if(key==="kg"||key==="total") {av=parseFloat(av);bv=parseFloat(bv);}
-            if(key==="timestamp") {av=new Date(av);bv=new Date(bv);}
-            if(av<bv) return currentSort.asc?-1:1;
-            if(av>bv) return currentSort.asc?1:-1;
-            return 0;
-          });
-
-          // uppdatera pilar
+          renderOrders(orders);
           headers.forEach(h=>h.classList.remove("asc","desc"));
           th.classList.add(currentSort.asc?"asc":"desc");
-
-          renderOrders(sorted);
         };
       });
-
     }
+
 
     document.getElementById("year").textContent = new Date().getFullYear();
 
