@@ -406,6 +406,9 @@
           ...o,
           delivered: o.delivered === true || (o.delivered || "").toString().toLowerCase() === "levererad"
         }));
+
+          orders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+          
           renderOrders(orders);
         } else {
           document.getElementById("ordersResult").textContent = "Kunde inte hämta beställningar.";
@@ -424,7 +427,7 @@
       const tbody = document.querySelector("#ordersTable tbody");
       tbody.innerHTML = "";
 
-      // 🔹 Visa antingen 10 första eller alla
+      // 🔹 Visa antingen 6 första eller alla
       const displayed = showAllOrders ? data : data.slice(0, 6);
 
       // 🔹 Summera alltid ALLA orders (inte bara visade)
