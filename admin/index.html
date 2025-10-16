@@ -266,7 +266,7 @@
     const inputAvailable = document.getElementById('inputAvailable');
     const inputPriceKokta = document.getElementById('inputPriceKokta');
     const inputPriceLevande = document.getElementById('inputPriceLevande');
-
+    let intervalId = null;
     const metaResult = document.getElementById('metaResult');
 
     const frontTitle = document.getElementById('frontTitle');
@@ -387,6 +387,7 @@
           document.getElementById("loginScreen").style.display="none";
           document.getElementById("appContent").style.display="block";
           await init(); // starta appen
+          startAutoUpdate();
         } else {
           error.style.display = "block";
         }
@@ -559,9 +560,41 @@
         };
       });
     }
-    
+
     document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("year").textContent = new Date().getFullYear();
+    });
+
+    // Starta automatisk uppdatering
+    function startAutoUpdate() {
+      if (!intervalId) {
+        intervalId = setInterval(() => {
+          loadMeta();    // uppdaterar priser och tillgång
+          loadOrders();  // uppdaterar beställningar
+        }, 3000); // varje 3:e sekund
+      }
+    }
+
+    // Stoppa automatisk uppdatering
+    function stopAutoUpdate() {
+      if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+    }
+
+    // Kör direkt om sidan är aktiv
+    
+
+    // Lyssna på flikbyte (visibility change)
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        stopAutoUpdate(); // pausa när fliken inte syns
+      } else if (authToken) { // KÖR ENDAST OM TOKEN FINNS
+        loadMeta();       // uppdatera direkt när användaren kommer tillbaka
+        loadOrders();     // uppdatera beställningar
+        startAutoUpdate();
+      }
     });
 
   </script>
