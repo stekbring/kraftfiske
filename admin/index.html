@@ -272,9 +272,9 @@
 
     let authToken = null;
 
-    async function init(){
-      await loadMeta();
-      await loadOrders();
+    async function init() {
+      // Kör båda hämtningarna samtidigt
+      await Promise.all([loadMeta(), loadOrders()]);
     }
 
     async function loadMeta(){
