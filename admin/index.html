@@ -85,6 +85,7 @@
     }
     .card {
       overflow-x: auto;  /* scrolla horisontellt om det behövs */
+      overflow: visible;
       width: 100%;
     }
 
@@ -108,6 +109,69 @@
     th.sortable.desc::after {
       content: "▼";
     }
+
+    /* --- Meny för varje orderrad --- */
+    .order-menu-container {
+      position: absolute;
+      top: 50%;
+      right: 6px;
+      transform: translateY(-50%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .order-menu-btn {
+      background: none;
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+      padding: 0 4px;
+      color: #333;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    td {
+      position: relative; /* gör varje cell till en stacking context */
+      z-index: 1;
+    }
+    
+    .order-menu-dropdown {
+      display: none;
+      position: absolute;
+      top: 24px;
+      right: 0;
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      border-radius: 6px;
+      z-index: 9999; /* ⬅ höj denna rejält */
+      min-width: 120px;
+    }
+
+    .order-menu-dropdown button {
+      width: 100%;
+      padding: 8px 12px;
+      border: none;
+      background: none;
+      text-align: left;
+      cursor: pointer;
+      color: #333;
+      font-size: 13px;
+    }
+
+    .order-menu-dropdown button:hover {
+      background: #f2f2f2;
+    }
+
+    input.inline-edit {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 2px 4px;
+      font-size: 13px;
+    }
+
 
     @media (max-width: 600px) {
       .meta-row {
@@ -142,13 +206,19 @@
     @media (max-width:480px){
       header img{height:48px}
       header h1{font-size:18px}
-    }
-    .stat p {
-      font-size: 16px;
-    }
-    .stat h3 {
-      font-size: 12px;
-    }
+      }
+      .stat p {
+        font-size: 16px;
+      }
+      .stat h3 {
+        font-size: 12px;
+      }
+      .order-menu-container {
+        right: -10px;
+      }
+      .order-menu-btn {
+        font-size: 20px;
+      }
 
     /* small helper styles */
     .muted{color:var(--muted)}
@@ -462,17 +532,121 @@
 
         tr.innerHTML = `
           <td>${escapeHtml(tidKort)}</td>
-          <td>${escapeHtml(order.name)}</td>
-          <td>${escapeHtml(order.type)}</td>
-          <td>${order.kg}</td>
-          <td>${order.total}</td>
-          <td>
+          <td class="editable" data-field="name">${escapeHtml(order.name)}</td>
+          <td class="editable" data-field="type">${escapeHtml(order.type)}</td>
+          <td class="editable" data-field="kg">${order.kg}</td>
+          <td class="editable" data-field="total">${order.total}</td>
+          <td style="position: relative;">
             <button class="status-btn ${statusColor}" data-id="${order.id}" data-status="${order.delivered}">
               ${statusText}
             </button>
+            <div class="order-menu-container">
+              <button class="order-menu-btn">⋮</button>
+              <div class="order-menu-dropdown">
+                <button class="edit-order-btn" data-id="${order.id}">Redigera</button>
+                <button class="delete-order-btn" data-id="${order.id}">Ta bort</button>
+              </div>
+            </div>
           </td>
         `;
+
         tbody.appendChild(tr);
+
+        // --- Meny-knappar (⋮) ---
+        tr.querySelector(".order-menu-btn").addEventListener("click", (e) => {
+          e.stopPropagation();
+          const dropdown = tr.querySelector(".order-menu-dropdown");
+          const visible = dropdown.style.display === "block";
+          
+          // Stäng alla andra menyer först
+          document.querySelectorAll(".order-menu-dropdown").forEach(dd => dd.style.display = "none");
+
+          if (!visible) {
+            dropdown.style.display = "block";
+            stopAutoUpdate(); // ⏸ pausa autouppdatering när meny är öppen
+          } else {
+            dropdown.style.display = "none";
+            startAutoUpdate(); // ▶️ återuppta när den stängs
+          }
+        });
+
+        // Klick utanför stänger alla menyer och återstartar autouppdatering
+        document.addEventListener("click", () => {
+          const anyOpen = Array.from(document.querySelectorAll(".order-menu-dropdown"))
+            .some(dd => dd.style.display === "block");
+
+          document.querySelectorAll(".order-menu-dropdown").forEach(dd => dd.style.display = "none");
+          
+          if (anyOpen) startAutoUpdate();
+        });
+
+        // --- Ta bort order ---
+        tr.querySelector(".delete-order-btn").addEventListener("click", async () => {
+          if (!confirm("Ta bort denna beställning?")) return;
+          const id = order.id;
+          const res = await fetch(scriptURL, {
+            method: "POST",
+            body: JSON.stringify({ action: "deleteOrder", token: authToken, id })
+          });
+          const json = await res.json();
+          if (json.success) loadOrders();
+        });
+
+        // --- Aktivera inline-redigering ---
+        tr.querySelector(".edit-order-btn").addEventListener("click", () => {
+          stopAutoUpdate(); // ⏸ pausa autouppdateringen när man redigerar
+
+          const editableCells = tr.querySelectorAll(".editable");
+          editableCells.forEach(td => {
+            const field = td.dataset.field;
+            const original = td.textContent.trim();
+
+            const input = document.createElement("input");
+            input.type = (field === "kg" || field === "total") ? "number" : "text";
+            input.step = field === "kg" ? "0.1" : "1";
+            input.className = "inline-edit";
+            input.value = original;
+            td.textContent = "";
+            td.appendChild(input);
+          });
+
+          const saveChanges = async () => {
+            const updates = {};
+            editableCells.forEach(td => {
+              const field = td.dataset.field;
+              const input = td.querySelector("input");
+              if (input) updates[field] = input.value.trim();
+            });
+
+            const res = await fetch(scriptURL, {
+              method: "POST",
+              body: JSON.stringify({
+                action: "editOrder",
+                token: authToken,
+                id: order.id,
+                ...updates
+              })
+            });
+
+            const json = await res.json();
+            if (json.success) {
+              loadOrders();
+            } else {
+              alert("Fel vid uppdatering");
+            }
+
+            startAutoUpdate(); // ▶️ starta igen efter redigering
+          };
+
+          // Tryck Enter eller klicka utanför => spara
+          editableCells.forEach(td => {
+            const input = td.querySelector("input");
+            input.addEventListener("keydown", e => {
+              if (e.key === "Enter") saveChanges();
+            });
+            input.addEventListener("blur", () => saveChanges());
+          });
+        });
       });
 
       // 🔹 Lägg till "Visa fler / Visa mindre"-knapp
@@ -571,7 +745,7 @@
         intervalId = setInterval(() => {
           loadMeta();    // uppdaterar priser och tillgång
           loadOrders();  // uppdaterar beställningar
-        }, 3000); // varje 3:e sekund
+        }, 5000); // varje 3:e sekund
       }
     }
 
