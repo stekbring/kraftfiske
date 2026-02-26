@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>Admin - Olles Fiske</title>
+  <link rel="icon" type="image/png" href="loggasimpelvit.ico">
+  <style>
+    /* --- färger och typografi matchar din hemsida --- */
+    :root{
+      --bg: #891212; /* huvudbakgrund */
+      --header: #680c0c;
+      --card: #ffffff;
+      --muted: #555;
+      --accent: #891212;
+      --radius: 10px;
+      --max-width: 1100px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family: 'Times New Roman', Times, serif, Helvetica, sans-serif; background:var(--bg); color:#111; min-height:100vh; display:flex; flex-direction:column;
+    }
+    header{background:var(--header); color:white; padding:14px 18px; display:flex; align-items:center; gap:14px;}
+    header img{height:30px}
+    header h1{font-size:20px;margin:0}
+    .wrap{width:95%; max-width:var(--max-width); margin:18px auto 80px;}
+
+    .grid{display:grid; grid-template-columns: 1fr 360px; gap:18px;}
+    .card{background:var(--card); border-radius:var(--radius); padding:16px; box-shadow:0 6px 20px rgba(0,0,0,0.12);} 
+
+    /* Dashboard top */
+    .stats{display:flex; gap:12px; align-items:stretch}
+    .stat{flex:1; padding:12px; border-radius:8px; background:#fff7f7; display:flex; flex-direction:column; justify-content:center;}
+    .stat h3{margin:0;font-size:14px;color:var(--muted)}
+    .stat p{margin:6px 0 0; font-size:20px; font-weight:bold}
+
+    /* form styles */
+    label{display:block; margin-top:8px; font-size:13px}
+    input[type="text"], input[type="password"], input[type="number"], textarea, select{font-size: 16px; width:100%; padding:8px; margin-top:6px; border:1px solid #ddd; border-radius:6px}
+    button{background:var(--accent); color:white; border:0; padding:10px 12px; border-radius:8px; cursor:pointer}
+
+    /* orders table */
+    table{width:100%; border-collapse:collapse; font-size:13px}
+    th, td{padding:8px; border-bottom:1px solid #eee; text-align:left}
+    th{background:#fafafa}
+    .small{font-size:12px;color:var(--muted)}
+
+    /* right column */
+    .right-col{display:flex; flex-direction:column; gap:12px}
+
+    /* Gör inputrutorna för pris/tillgång på samma rad */
+    .meta-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    .meta-item {
+      flex: 1;
+      min-width: 110px;
+    }
+    .meta-item label {
+      font-size: 13px;
+    }
+    .meta-item input {
+      width: 100%;
+    }
+
+    .status-btn {
+      padding: 4px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      border: none;
+      font-size: 12px;
+      color: #fff;
+    }
+    .status-btn.green {
+      background: #28a745;
+    }
+    .status-btn.red {
+      background: #d33;
+    }
+    .status-btn:hover {
+      opacity: 0.8;
+    }
+    .card {
+      overflow-x: auto;  /* scrolla horisontellt om det behövs */
+      overflow: visible;
+      width: 100%;
+    }
+
+    #ordersTable {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: auto; /* låter kolumnerna anpassa sig */
+      min-width: unset;   /* ta bort min-width som tvingar bredd */
+    }
+    /* sorteringspilar */
+    th.sortable::after {
+      content: " ";          /* default tomt */
+      margin-left: 6px;
+      font-size: 10px;
+    }
+
+    th.sortable.asc::after {
+      content: "▲";
+    }
+
+    th.sortable.desc::after {
+      content: "▼";
+    }
+
+    /* --- Meny för varje orderrad --- */
+    .order-menu-container {
+      position: absolute;
+      top: 50%;
+      right: 6px;
+      transform: translateY(-50%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .order-menu-btn {
+      background: none;
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+      padding: 0 4px;
+      color: #333;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    td {
+      position: relative; /* gör varje cell till en stacking context */
+      z-index: 1;
+    }
+    
+    .order-menu-dropdown {
+      display: none;
+      position: absolute;
+      top: 24px;
+      right: 0;
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      border-radius: 6px;
+      z-index: 9999; /* ⬅ höj denna rejält */
+      min-width: 120px;
+    }
+
+    .order-menu-dropdown button {
+      width: 100%;
+      padding: 8px 12px;
+      border: none;
+      background: none;
+      text-align: left;
+      cursor: pointer;
+      color: #333;
+      font-size: 13px;
+    }
+
+    .order-menu-dropdown button:hover {
+      background: #f2f2f2;
+    }
+
+    input.inline-edit {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 2px 4px;
+      font-size: 13px;
+    }
+
+
+    @media (max-width: 600px) {
+      .meta-row {
+        flex-direction: column;
+      }
+      .wrap {
+        width: 100%;
+      }
+      table {
+        font-size: 12px;
+      }
+      th, td {
+        padding: 6px;
+      }
+    }
+
+    /* responsive */
+    @media (max-width:900px){
+      .grid{grid-template-columns: 1fr;}
+      header{
+        flex-direction:column; 
+        align-items:flex-start;
+        align-items: center;    /* ändra från flex-start till center */
+        text-align: center;
+      }
+      header h1 {
+      margin-top: 8px; /* lite mellanrum under loggan */
+      }
+    }
+
+    /* mobile tweaks */
+    @media (max-width:480px){
+      header img{height:48px}
+      header h1{font-size:18px}
+      }
+      .stat p {
+        font-size: 16px;
+      }
+      .stat h3 {
+        font-size: 12px;
+      }
+      .order-menu-container {
+        right: -10px;
+      }
+      .order-menu-btn {
+        font-size: 20px;
+      }
+
+    /* small helper styles */
+    .muted{color:var(--muted)}
+    .pill{display:inline-block;padding:6px 10px;border-radius:999px;background:#fff0f0;font-weight:600}
+    .status-select{padding:6px;border-radius:6px}
+  </style>
+</head>
+<body>
+
+  <div id="loginScreen" style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; background:#891212; color:#fff;">
+    <div style="background:#fff; color:#000; padding:20px; border-radius:10px; width:300px; box-shadow:0 4px 12px rgba(0,0,0,0.3);">
+      <h2>Admin Login</h2>
+      <label>Användarnamn</label>
+      <input type="text" id="loginUser">
+      <label>Lösenord</label>
+      <input type="password" id="loginPass" onkeydown="if(event.key==='Enter') document.getElementById('loginBtn').click();">
+      <button id="loginBtn" style="margin-top:12px; width:100%;">Logga in</button>
+      <p id="loginError" style="color:red; font-size:12px; display:none;">Fel användarnamn eller lösenord</p>
+      <p id="loginLoading" style="color:#333; font-size:12px; display:none;">Loggar in...</p>
+    </div>
+  </div>
+  <div id="appContent" style="display:none;">
+
+  <header>
+    <img src="loggasimpelvit2.png" alt="logo">
+    <h1>Adminpanel</h1>
+  </header>
+
+  <div class="wrap">
+    <div class="grid">
+      <div>
+        <div class="card">
+          <div class="stats">
+            <div class="stat">
+              <h3>Tillgängligt</h3>
+              <p id="adminAvailable">— kg</p>
+            </div>
+            <div class="stat">
+              <h3>Kokta</h3>
+              <p id="adminPriceKokta">— kr/kg</p>
+            </div>
+            <div class="stat">
+              <h3>Levande</h3>
+              <p id="adminPriceLevande">— kr/kg</p>
+            </div>
+          </div>
+
+          <hr style="margin:14px 0">
+
+          <h3>Uppdatera lager & pris</h3>
+          <form id="metaForm">
+            <div class="meta-row">
+              <div class="meta-item">
+                <label>Tillgängligt (kg)</label>
+                <input type="number" step="0.5" id="inputAvailable" min="0">
+              </div>
+              <div class="meta-item">
+                <label>Kokta (kr/kg)</label>
+                <input type="number" step="1" id="inputPriceKokta" min="0">
+              </div>
+              <div class="meta-item">
+                <label>Levande (kr/kg)</label>
+                <input type="number" step="1" id="inputPriceLevande" min="0">
+              </div>
+            </div>
+            <div style="display:flex; gap:8px; margin-top:10px">
+              <button type="button" id="saveMeta">Spara</button>
+              <button type="button" id="setSoldOut">Sätt som SLUT</button>
+              <button type="button" id="resetSoldOut" style="display:none">Återställ</button>
+            </div>
+            <p id="metaResult" class="small muted"></p>
+          </form>
+
+          <hr style="margin:14px 0">
+
+          </div> <!-- stänger första carden -->
+
+          <div class="card" style="margin-top:18px;">
+            <h3>Beställningar</h3>
+            <div id="ordersSummary" class="small muted" style="margin-bottom:10px;">
+              Totalt: — kg  ≈ — kräftor  -  — kr
+            </div>
+
+            <table id="ordersTable">
+              <thead>
+                <tr>
+                  <th>Datum</th>
+                  <th>Namn</th>
+                  <th>Typ</th>
+                  <th>Kg</th>
+                  <th>Summa (kr)</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+            <p id="ordersResult" class="small muted"></p>
+          </div>
+
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+
+    const scriptURL = "https://script.google.com/macros/s/AKfycbx64nZCG3aUAIqgqTtrp3XhYKjKdD8lQA1uj4k1cweXEnqxPRkoZzJ6Z09fh1eg4lhyxQ/exec"; // <-- samma som på din sida (ändra vid behov)
+
+    // --- DOM helpers ---
+    const adminAvailable = document.getElementById('adminAvailable');
+    const adminPriceKokta = document.getElementById('adminPriceKokta');
+    const adminPriceLevande = document.getElementById('adminPriceLevande');
+
+    const inputAvailable = document.getElementById('inputAvailable');
+    const inputPriceKokta = document.getElementById('inputPriceKokta');
+    const inputPriceLevande = document.getElementById('inputPriceLevande');
+    let intervalId = null;
+    const metaResult = document.getElementById('metaResult');
+
+    const frontTitle = document.getElementById('frontTitle');
+    const frontText = document.getElementById('frontText');
+    const frontResult = document.getElementById('frontResult');
+
+    const ordersTableBody = document.querySelector('#ordersTable tbody');
+
+    let orders = [];
+
+
+    let authToken = null;
+
+    async function init() {
+      // Kör båda hämtningarna samtidigt
+      await Promise.all([loadMeta(), loadOrders()]);
+    }
+
+    async function loadMeta(){
+      try {
+        const res = await fetch(scriptURL, {
+          method: "POST",
+          body: JSON.stringify({ action: "getMeta", token: authToken })
+        });
+        const json = await res.json();
+        if(json.success){
+          adminAvailable.textContent = json.available + " kg";
+          adminPriceKokta.textContent = json.prices.kokta + " kr/kg";
+          adminPriceLevande.textContent = json.prices.levande + " kr/kg";
+
+          inputAvailable.value = json.available;
+          inputPriceKokta.value = json.prices.kokta;
+          inputPriceLevande.value = json.prices.levande;
+        } else {
+          metaResult.textContent = "Kunde inte hämta data.";
+        }
+      } catch(err){
+        console.error(err);
+        metaResult.textContent = "Fel vid laddning.";
+      }
+    }
+
+    // --- SPARA ---
+    document.getElementById("saveMeta").addEventListener("click", async ()=>{
+      const available = parseFloat(inputAvailable.value);
+      const priceKokta = parseFloat(inputPriceKokta.value);
+      const priceLevande = parseFloat(inputPriceLevande.value);
+
+      metaResult.textContent = "Sparar...";
+
+      try {
+        const res = await fetch(scriptURL, {
+          method: "POST",
+          body: JSON.stringify({
+            action: "updateMeta",
+            token: authToken,
+            available,
+            priceKokta,
+            priceLevande
+          })
+        });
+        const json = await res.json();
+        if(json.success){
+          metaResult.textContent = "Uppdaterat!";
+          await loadMeta();
+        } else {
+          metaResult.textContent = "Fel: " + (json.error || "Okänt");
+        }
+      } catch(err){
+        console.error(err);
+        metaResult.textContent = "Fel vid uppdatering.";
+      }
+    });
+
+    // --- SÄTT SLUT ---
+    document.getElementById("setSoldOut").addEventListener("click", async ()=>{
+      if(!confirm("Sätt tillgänglighet till 0 kg?")) return;
+      metaResult.textContent = "Uppdaterar...";
+
+      const res = await fetch(scriptURL, {
+        method:"POST",
+        body: JSON.stringify({ action:"setSoldOut", token:authToken })
+      });
+      const json = await res.json();
+      if(json.success){
+        await loadMeta();
+        metaResult.textContent = "Markerat som SLUT!";
+      } else {
+        metaResult.textContent = "Fel: " + (json.error || "Okänt");
+      }
+    });
+
+
+
+
+    document.getElementById("loginBtn").addEventListener("click", async ()=>{
+      const username = document.getElementById("loginUser").value.trim();
+      const password = document.getElementById("loginPass").value.trim();
+      const loading = document.getElementById("loginLoading");
+      const error = document.getElementById("loginError");
+
+      // döljer felmeddelande och visar "loggar in..."
+      error.style.display = "none";
+      loading.style.display = "block";
+
+      try {
+        const res = await fetch(scriptURL, { 
+          method:"POST", 
+          body: JSON.stringify({ action:"login", username, password }) 
+        });
+        const json = await res.json();
+
+        // döljer laddtext
+        loading.style.display = "none";
+
+        if(json.success){
+          authToken = json.token;
+          document.getElementById("loginScreen").style.display="none";
+          document.getElementById("appContent").style.display="block";
+          await init(); // starta appen
+          startAutoUpdate();
+        } else {
+          error.style.display = "block";
+        }
+      } catch(err){
+        console.error(err);
+        loading.style.display = "none";
+        error.style.display = "block";
+      }
+    });
+
+    // small helpers
+    function escapeHtml(str){ if(!str) return ''; return String(str).replace(/[&<>"']/g, function(m){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"})[m]; }); }
+    
+    async function loadOrders() {
+      try {
+        const res = await fetch(scriptURL, {
+          method: "POST",
+          body: JSON.stringify({ action: "getOrders", token: authToken })
+        });
+        const json = await res.json();
+
+        if (json.success) {
+          // konverterar levererad till bool korrekt
+          orders = json.orders.map(o => ({
+          ...o,
+          delivered: o.delivered === true || (o.delivered || "").toString().toLowerCase() === "levererad"
+        }));
+
+          orders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+          renderOrders(orders);
+        } else {
+          document.getElementById("ordersResult").textContent = "Kunde inte hämta beställningar.";
+        }
+      } catch (err) {
+        console.error(err);
+        document.getElementById("ordersResult").textContent = "Fel vid laddning av beställningar.";
+      }
+    }
+
+    // --- sorteringslogik ---
+    let currentSort = { key: "timestamp", asc: false };
+    let showAllOrders = false;
+
+    function renderOrders(data) {
+      const tbody = document.querySelector("#ordersTable tbody");
+      tbody.innerHTML = "";
+
+      // 🔹 Visa antingen 6 första eller alla
+      const displayed = showAllOrders ? data : data.slice(0, 6);
+
+      // 🔹 Summera alltid ALLA orders (inte bara visade)
+      const totalKg = orders.reduce((sum, o) => sum + parseFloat(o.kg), 0);
+      const totalKr = orders.reduce((sum, o) => sum + parseFloat(o.total), 0);
+      const totalKraftor = Math.round(totalKg * 20);
+
+      // 🔹 Uppdatera totalsammanfattning
+      document.getElementById("ordersSummary").innerHTML = `
+        Totalt: <strong>${totalKg.toFixed(1)} kg</strong> 
+         ≈ ${totalKraftor} kräftor  -   
+        <strong>${totalKr.toFixed(0)} kr</strong>
+      `;
+
+      // 🔹 Rita endast de som ska visas
+      displayed.forEach(order => {
+        const tr = document.createElement("tr");
+        const statusColor = order.delivered ? "green" : "red";
+        const statusText = order.delivered ? "Levererad" : "Ej levererad";
+
+        // ta bort sekunder från tidsstämpeln (hh:mm istället för hh:mm:ss)
+        const tidKort = order.timestamp.replace(/(\d{2}:\d{2}):\d{2}/, "$1");
+
+        tr.innerHTML = `
+          <td>${escapeHtml(tidKort)}</td>
+          <td class="editable" data-field="name">${escapeHtml(order.name)}</td>
+          <td class="editable" data-field="type">${escapeHtml(order.type)}</td>
+          <td class="editable" data-field="kg">${order.kg}</td>
+          <td class="editable" data-field="total">${order.total}</td>
+          <td style="position: relative;">
+            <button class="status-btn ${statusColor}" data-id="${order.id}" data-status="${order.delivered}">
+              ${statusText}
+            </button>
+            <div class="order-menu-container">
+              <button class="order-menu-btn">⋮</button>
+              <div class="order-menu-dropdown">
+                <button class="edit-order-btn" data-id="${order.id}">Redigera</button>
+                <button class="delete-order-btn" data-id="${order.id}">Ta bort</button>
+              </div>
+            </div>
+          </td>
+        `;
+
+        tbody.appendChild(tr);
+
+        // --- Meny-knappar (⋮) ---
+        tr.querySelector(".order-menu-btn").addEventListener("click", (e) => {
+          e.stopPropagation();
+          const dropdown = tr.querySelector(".order-menu-dropdown");
+          const visible = dropdown.style.display === "block";
+          
+          // Stäng alla andra menyer först
+          document.querySelectorAll(".order-menu-dropdown").forEach(dd => dd.style.display = "none");
+
+          if (!visible) {
+            dropdown.style.display = "block";
+            stopAutoUpdate(); // ⏸ pausa autouppdatering när meny är öppen
+          } else {
+            dropdown.style.display = "none";
+            startAutoUpdate(); // ▶️ återuppta när den stängs
+          }
+        });
+
+        // Klick utanför stänger alla menyer och återstartar autouppdatering
+        document.addEventListener("click", () => {
+          const anyOpen = Array.from(document.querySelectorAll(".order-menu-dropdown"))
+            .some(dd => dd.style.display === "block");
+
+          document.querySelectorAll(".order-menu-dropdown").forEach(dd => dd.style.display = "none");
+          
+          if (anyOpen) startAutoUpdate();
+        });
+
+        // --- Ta bort order ---
+        tr.querySelector(".delete-order-btn").addEventListener("click", async () => {
+          if (!confirm("Ta bort denna beställning?")) return;
+          const id = order.id;
+          const res = await fetch(scriptURL, {
+            method: "POST",
+            body: JSON.stringify({ action: "deleteOrder", token: authToken, id })
+          });
+          const json = await res.json();
+          if (json.success) loadOrders();
+        });
+
+        // --- Aktivera inline-redigering ---
+        tr.querySelector(".edit-order-btn").addEventListener("click", () => {
+          stopAutoUpdate(); // ⏸ pausa autouppdateringen när man redigerar
+
+          const editableCells = tr.querySelectorAll(".editable");
+          editableCells.forEach(td => {
+            const field = td.dataset.field;
+            const original = td.textContent.trim();
+
+            const input = document.createElement("input");
+            input.type = (field === "kg" || field === "total") ? "number" : "text";
+            input.step = field === "kg" ? "0.1" : "1";
+            input.className = "inline-edit";
+            input.value = original;
+            td.textContent = "";
+            td.appendChild(input);
+          });
+
+          const saveChanges = async () => {
+            const updates = {};
+            editableCells.forEach(td => {
+              const field = td.dataset.field;
+              const input = td.querySelector("input");
+              if (input) updates[field] = input.value.trim();
+            });
+
+            const res = await fetch(scriptURL, {
+              method: "POST",
+              body: JSON.stringify({
+                action: "editOrder",
+                token: authToken,
+                id: order.id,
+                ...updates
+              })
+            });
+
+            const json = await res.json();
+            if (json.success) {
+              loadOrders();
+            } else {
+              alert("Fel vid uppdatering");
+            }
+
+            startAutoUpdate(); // ▶️ starta igen efter redigering
+          };
+
+          // Tryck Enter eller klicka utanför => spara
+          editableCells.forEach(td => {
+            const input = td.querySelector("input");
+            input.addEventListener("keydown", e => {
+              if (e.key === "Enter") saveChanges();
+            });
+            input.addEventListener("blur", () => saveChanges());
+          });
+        });
+      });
+
+      // 🔹 Lägg till "Visa fler / Visa mindre"-knapp
+      const toggleRow = document.createElement("tr");
+      const td = document.createElement("td");
+      td.colSpan = 6;
+      td.style.textAlign = "center";
+      td.innerHTML = `
+        <button id="toggleOrdersBtn" style="margin-top:8px; padding:6px 12px; border-radius:6px; border:none; background:#891212; color:white; cursor:pointer;">
+          ${showAllOrders ? "Visa mindre" : "Visa alla"}
+        </button>
+      `;
+      toggleRow.appendChild(td);
+      tbody.appendChild(toggleRow);
+
+      document.getElementById("toggleOrdersBtn").addEventListener("click", () => {
+        showAllOrders = !showAllOrders;
+        renderOrders(orders);
+      });
+
+      // 🔹 Uppdatera statusknapparna (samma som tidigare)
+      document.querySelectorAll(".status-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const id = btn.dataset.id;
+          const current = btn.dataset.status === "true";
+          const newStatus = !current;
+
+          const originalText = btn.textContent;
+          btn.textContent = "Sparar...";
+          btn.disabled = true;
+
+          try {
+            const res = await fetch(scriptURL, {
+              method: "POST",
+              body: JSON.stringify({
+                action: "updateOrderStatus",
+                token: authToken,
+                id,
+                delivered: newStatus
+              })
+            });
+            const json = await res.json();
+            if (json.success) {
+              btn.textContent = newStatus ? "Levererad" : "Ej levererad";
+              btn.classList.toggle("green", newStatus);
+              btn.classList.toggle("red", !newStatus);
+              btn.dataset.status = newStatus;
+              const orderIndex = orders.findIndex(o => o.id == id);
+              if (orderIndex !== -1) orders[orderIndex].delivered = newStatus;
+            } else {
+              btn.textContent = "Fel!";
+              setTimeout(() => { btn.textContent = originalText; }, 1000);
+            }
+          } catch (err) {
+            console.error(err);
+            btn.textContent = "Fel vid sparning";
+            setTimeout(() => { btn.textContent = originalText; }, 1500);
+          } finally {
+            btn.disabled = false;
+          }
+        });
+      });
+
+      // 🔹 Sorteringslogiken (behåll som den var)
+      const headers = document.querySelectorAll("#ordersTable thead th");
+      headers.forEach((th, i) => {
+        const keys = ["timestamp","name","type","kg","total","delivered"];
+        const key = keys[i];
+        th.classList.add("sortable");
+        th.style.cursor = "pointer";
+        th.onclick = () => {
+          if (currentSort.key === key) currentSort.asc = !currentSort.asc;
+          else currentSort = { key, asc: true };
+          const sorted = [...orders].sort((a,b)=>{
+            let av=a[key], bv=b[key];
+            if(key==="kg"||key==="total") {av=parseFloat(av);bv=parseFloat(bv);}
+            if(key==="timestamp") {av=new Date(av);bv=new Date(bv);}
+            if(av<bv) return currentSort.asc?-1:1;
+            if(av>bv) return currentSort.asc?1:-1;
+            return 0;
+          });
+          headers.forEach(h=>h.classList.remove("asc","desc"));
+          th.classList.add(currentSort.asc?"asc":"desc");
+          renderOrders(sorted);
+        };
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("year").textContent = new Date().getFullYear();
+    });
+
+    // Starta automatisk uppdatering
+    function startAutoUpdate() {
+      if (!intervalId) {
+        intervalId = setInterval(() => {
+          loadMeta();    // uppdaterar priser och tillgång
+          loadOrders();  // uppdaterar beställningar
+        }, 5000); // varje 3:e sekund
+      }
+    }
+
+    // Stoppa automatisk uppdatering
+    function stopAutoUpdate() {
+      if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+    }
+
+    // Kör direkt om sidan är aktiv
+    
+
+    // Lyssna på flikbyte (visibility change)
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        stopAutoUpdate(); // pausa när fliken inte syns
+      } else if (authToken) { // KÖR ENDAST OM TOKEN FINNS
+        loadMeta();       // uppdatera direkt när användaren kommer tillbaka
+        loadOrders();     // uppdatera beställningar
+        startAutoUpdate();
+      }
+    });
+
+  </script>
+
+  <footer style="text-align:center; padding:18px; color:#fff; background:var(--header); margin-top:26px">
+    &copy; <span id="year"></span> Olles & Maltes Fiske
+  </footer>
+
+</body>
+</html>

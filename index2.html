@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-MJWDG3R1ZK"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-MJWDG3R1ZK');
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Olles Fiske</title>
+  
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Times New Roman', Times, serif, Helvetica, sans-serif;
+      background: #891212;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    .container{touch-action: manipulation;}
+
+    header {
+      display: flex;
+      align-items: center;
+      background: #680c0c;
+      color: white;
+      padding: 10px 20px;
+      flex-wrap: wrap;
+    }
+
+    header img { 
+      height: 50px; 
+      margin-right: 20px; 
+      margin-top: 10px;
+      margin-bottom: 10px;
+    }
+    header h1 { 
+      font-size: 24px; 
+      margin: 0; 
+    }
+
+    nav { margin-left: auto; display: flex; align-items: center; flex-wrap: wrap; gap: 10px;}
+    nav a {
+      color: white; text-decoration: none; margin: 0 5px; font-weight: bold; cursor: pointer;
+    }
+    nav a.active { text-decoration: underline; }
+    
+    /* Login button specific style */
+    .login-btn {
+      background: #fff;
+      color: #891212;
+      padding: 5px 10px;
+      border-radius: 5px;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .logout-btn {
+      background: #444;
+      color: #fff;
+      padding: 5px 10px;
+      border-radius: 5px;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    main.content {
+      flex: 1;
+      width: 85%;
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      min-height: calc(100vh - 320px);
+    }
+    .kg-control {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 10px;
+    }
+
+    .kg-control button {
+      background: #891212;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 20px;
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+    }
+
+    .kg-display {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+      min-width: 80px;
+      justify-content: center; 
+      margin-top: 15px;
+    }
+
+    .kg-display span {
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .newsletter-label {
+      font-size: 15px;
+      color: #444;
+    }
+
+    .newsletter-label input {
+        vertical-align: middle;
+        transform: scale(1.1);
+        margin-right: 6px;
+        margin-top: 3px;
+      }
+
+    footer {
+      text-align: center;
+      padding: 60px 20px 20px;
+      background: #680c0c;
+      color: white;
+      margin-top: 40px;
+    }
+
+    .footer-bg { background: #680c0c; height: 200px; }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    form label { display: block; margin-top: 10px; }
+
+    form input, form select {
+      width: 100%; 
+      padding: 8px; 
+      margin-top: 5px;
+      border: 1px solid #ccc; 
+      border-radius: 5px;
+      box-sizing: border-box;
+    }
+    
+    form button[type="submit"] {
+      margin-top: 15px; padding: 10px; width: 100%;
+      background: #891212; color: white; border: none; border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .info { margin-top: 25px; font-weight: bold; }
+    #result { margin-top: 15px; font-weight: bold; }
+
+    .popup {
+      display: none; position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      justify-content: center; align-items: center;
+      z-index: 1000;
+    }
+    .popup-content {
+      background: white; padding: 20px; border-radius: 8px;
+      max-width: 400px; width: 90%; text-align: center;
+    }
+    .popup-content h3 { margin-top: 0; }
+    .popup button {
+      margin-top: 15px; padding: 10px 20px;
+      background: #680c0c; color: white; border: none; border-radius: 5px;
+      cursor: pointer;
+    }
+    
+    .google-btn {
+      background: #4285F4 !important;
+      color: white !important;
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    form label input[type="checkbox"] {
+      width: auto; margin-right: 8px;
+    }
+
+    .info-label {
+      font-size: 13px;
+      color: #555;
+      margin-left: 10px;
+      font-weight: normal;
+    }
+    
+    .order-history-item {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 5px;
+      background: #f9f9f9;
+    }
+
+    @media (max-width: 600px) {
+      header { flex-direction: column; align-items: center; text-align: center; }
+      header img { height: 110px; margin: 0; margin-top: 30px; }
+      header h1 { font-size: 30px; margin-bottom: 40px; margin-top: 10px; }
+      nav { margin: 10px 0 0 0; justify-content: center;}
+      nav a { display: inline-block; margin: 5px; font-size: 16px; }
+
+      .content {
+        width: 85%; max-width: 1200px; margin: 20px auto;
+        padding: 20px; background: white; border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        min-height: calc(100vh - 200px);
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <!-- BYT UT LOGGAN MOT DIN RIKTIGA BILDLÄNK OM DEN INTE LADDAR -->
+    <img src="loggasimpelvit2.png" alt="Olles Fishing Company">
+    <h1>Olle & Maltes Fiske</h1>
+    <nav>
+      <a onclick="showTab(event, 'boka')" class="active">Köp</a>
+      <a onclick="showTab(event, 'om')">Om oss</a>
+      <a onclick="showTab(event, 'info')">Info kräftor</a>
+      
+      <!-- Dynamiska Auth-knappar -->
+      <a onclick="showTab(event, 'minaSidor')" id="navMinaSidor" style="display:none;">Mina sidor</a>
+      <a href="admin" id="navAdmin" style="display:none; color: #ffeb3b;">Admin</a>
+      <button onclick="openLoginPopup()" id="navLoginBtn" class="login-btn">Logga in</button>
+      <button onclick="handleLogout()" id="navLogoutBtn" class="logout-btn" style="display:none;">Logga ut</button>
+    </nav>
+  </header>
+
+  <main class="content">
+    <section id="boka" class="tab-content active">
+      <h2>Köp kräftor</h2>
+      <p><b>Tillgängliga kräftor:</b> <span id="available">....</span> kg <span class="info-label">(1 kg är ca 20 kräftor)</span></p>
+      <p><b>Pris per kg:</b> Kokta: <span id="priceKokta">....</span> kr, Levande: <span id="priceLevande">....</span> kr</p>
+
+      <form id="bookingForm">
+        <label>Namn</label>
+        <input type="text" id="name" required>
+
+        <label>Telefonnummer</label>
+        <input type="text" id="phone">
+
+        <label>Email</label>
+        <input type="email" id="email" placeholder="Valfritt">
+
+        <label class="newsletter-label"><input type="checkbox" id="newsletter">Jag vill få ett mail när nya kräftor finns tillgängliga</label>
+
+        <div class="kg-control">
+          <button type="button" onclick="changeKg(-0.5)">−</button>
+          <div class="kg-display">
+            <span id="kgDisplay">0.0</span>
+            <span>kg</span>
+          </div>
+          <button type="button" onclick="changeKg(0.5)">+</button>
+        </div>
+
+        <input type="hidden" id="amount" value="0">
+        <label>Typ</label>
+        <select id="type">
+          <option value="kokta">Kokta</option>
+          <option value="levande">Levande</option>
+        </select>
+
+        <p class="info">Totalsumma: <span id="total">0</span> kr</p>
+        <button type="submit">Boka</button>
+        <button type="submit" id="notifyBtn" style="display:none">Meddela mig</button>
+      </form>
+
+      <p id="result"></p>
+    </section>
+
+    <section id="om" class="tab-content">
+      <h2>Om oss</h2>
+      <p>Vi har fiskat kräftor i generationer...</p>
+    </section>
+
+    <section id="info" class="tab-content">
+      <h2>Info om kräftor</h2>
+      <p><strong>Här kan du läsa mer om våra kräftor, skötselråd och tips inför kräftskivan.</strong><br><br><br>Just nu fiskar vi enbart <strong>signalkräftor</strong>, men i framtiden vill vi även börja erbjuda <strong>flodkräftor</strong>.<br><br>Allt fiske sker helt <strong>lagligt</strong> och i enlighet med gällande regler.<br>Samtliga kräftor vi säljer är noggrant kontrollerade och håller sig inom de rekommenderade <strong>standardmåtten</strong>.</p>
+    </section>
+
+    <!-- NY FLIK: MINA SIDOR -->
+    <section id="minaSidor" class="tab-content">
+      <h2>Mina sidor</h2>
+      <p>Inloggad som: <strong id="userEmailDisplay">Laddar...</strong></p>
+      <h3>Mina tidigare beställningar</h3>
+      <div id="orderHistory">
+        <p>Laddar beställningar...</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span>Kontakta oss gärna vid några funderingar på <a href="mailto:olle@kopkraftor.se" style="color: #ffffff;">olle@kopkraftor.se</a></span>
+    <br><br><br>&copy; <span id="year"></span> Olles & Maltes Fiske
+  </footer>
+  <div class="footer-bg"></div>
+
+  <!-- Vanlig Popup -->
+  <div id="popup" class="popup">
+    <div class="popup-content">
+      <h3>Bokning klar!</h3>
+      <p id="popupText"></p>
+      <button onclick="closePopup('popup')">Stäng</button>
+    </div>
+  </div>
+
+  <!-- Login Popup -->
+  <div id="loginPopup" class="popup">
+    <div class="popup-content">
+      <h3>Logga in eller Skapa konto</h3>
+      <p>För att se dina beställningar</p>
+
+      <div style="text-align: left; margin-bottom: 15px;">
+        <label style="font-size: 13px; font-weight: bold;">E-post</label>
+        <input type="email" id="loginEmail" placeholder="namn@exempel.se" style="width: 100%; padding: 8px; margin-top: 5px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;">
+        
+        <label style="font-size: 13px; font-weight: bold;">Lösenord</label>
+        <input type="password" id="loginPassword" placeholder="Minst 6 tecken" style="width: 100%; padding: 8px; margin-top: 5px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;">
+        
+        <div style="display: flex; gap: 10px; margin-top: 5px;">
+          <button id="emailLoginBtn" style="flex: 1; background: #891212; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; font-weight: bold;">Logga in</button>
+          <button id="emailRegisterBtn" style="flex: 1; background: #444; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; font-weight: bold;">Skapa konto</button>
+        </div>
+      </div>
+
+      <hr style="border: 0; border-top: 1px solid #ddd; margin: 15px 0;">
+
+      <button id="googleLoginBtn" class="google-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24"><path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Logga in med Google
+      </button>
+      <p id="loginError" style="color:red; font-size:12px; margin-top:10px;"></p>
+      <button onclick="closePopup('loginPopup')" style="background:#ccc; color:#000;">Avbryt</button>
+    </div>
+  </div>
+
+  <!-- FIREBASE OCH APPS SCRIPT LOGIK -->
+  <script type="module">
+    // --- 1. FIREBASE KONFIGURATION ---
+    // VIKTIGT: Du måste ersätta detta med din egen config från Firebase Console!
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBiACXQ1Axel-nCLcqMWAoNyKq2rXf5M40",
+        authDomain: "kraftfiske-851ca.firebaseapp.com",
+        projectId: "kraftfiske-851ca",
+        storageBucket: "kraftfiske-851ca.firebasestorage.app",
+        messagingSenderId: "428654477143",
+        appId: "1:428654477143:web:207c9ceebc39762643c812",
+        measurementId: "G-1YLNB1M747"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+
+    // --- 2. APPS SCRIPT URL ---
+    // Byt ut till din nya, uppdaterade URL när vi skrivit Apps Script koden
+    const scriptURL = "https://script.google.com/macros/s/AKfycbwT0bOV6v1yQpZW6zmzxigXPwGmCGl9IK7ASeitPiAIgWiZuUoWYIX45bj1APuXnDWulA/exec"; 
+    
+    // Globala variabler för auth
+    window.currentUserUID = null;
+    window.currentUserEmail = null;
+
+    // --- 3. AUTH LOGIK ---
+    
+    // Öppna/stäng inloggning
+    window.openLoginPopup = () => document.getElementById("loginPopup").style.display = "flex";
+    window.closePopup = (id) => document.getElementById(id).style.display = "none";
+
+    // E-post inloggning
+    document.getElementById("emailLoginBtn").addEventListener("click", () => {
+      const email = document.getElementById("loginEmail").value.trim();
+      const pass = document.getElementById("loginPassword").value.trim();
+      if (!email || !pass) { document.getElementById("loginError").textContent = "Fyll i båda fälten."; return; }
+      
+      document.getElementById("loginError").textContent = "Loggar in...";
+      signInWithEmailAndPassword(auth, email, pass).then(() => {
+        closePopup('loginPopup');
+        document.getElementById("loginError").textContent = "";
+        document.getElementById("loginEmail").value = "";
+        document.getElementById("loginPassword").value = "";
+      }).catch(err => {
+        document.getElementById("loginError").textContent = "Fel e-post eller lösenord.";
+      });
+    });
+
+    // Skapa konto med e-post
+    document.getElementById("emailRegisterBtn").addEventListener("click", () => {
+      const email = document.getElementById("loginEmail").value.trim();
+      const pass = document.getElementById("loginPassword").value.trim();
+      if (!email || !pass) { document.getElementById("loginError").textContent = "Fyll i båda fälten."; return; }
+      if (pass.length < 6) { document.getElementById("loginError").textContent = "Lösenordet måste vara minst 6 tecken."; return; }
+
+      document.getElementById("loginError").textContent = "Skapar konto...";
+      createUserWithEmailAndPassword(auth, email, pass).then(() => {
+        closePopup('loginPopup');
+        document.getElementById("loginError").textContent = "";
+        document.getElementById("loginEmail").value = "";
+        document.getElementById("loginPassword").value = "";
+      }).catch(err => {
+        if(err.code === 'auth/email-already-in-use') {
+          document.getElementById("loginError").textContent = "E-postadressen används redan.";
+        } else {
+          document.getElementById("loginError").textContent = "Fel: " + err.message;
+        }
+      });
+    });
+
+    // Utför Google Login
+    document.getElementById("googleLoginBtn").addEventListener("click", () => {
+      document.getElementById("loginError").textContent = "Loggar in...";
+      signInWithPopup(auth, provider)
+        .then((result) => {
+          closePopup('loginPopup');
+        }).catch((error) => {
+          document.getElementById("loginError").textContent = "Fel vid inloggning: " + error.message;
+        });
+    });
+
+    // Utför utloggning
+    window.handleLogout = () => {
+      signOut(auth).then(() => {
+        showTab({target: document.querySelector('nav a')}, 'boka'); // Gå till boka-fliken
+      });
+    };
+
+    // Lyssna på inloggningsstatus
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        // Användare är inloggad
+        window.currentUserUID = user.uid;
+        window.currentUserEmail = user.email;
+        
+        document.getElementById("navLoginBtn").style.display = "none";
+        document.getElementById("navLogoutBtn").style.display = "inline-block";
+        document.getElementById("navMinaSidor").style.display = "inline-block";
+        document.getElementById("userEmailDisplay").textContent = user.email;
+        
+        // Fyll i e-post automatiskt i bokningsformuläret och gör det read-only
+        const emailField = document.getElementById("email");
+        emailField.value = user.email;
+        
+        // Säg till Apps script att verifiera användaren (spara i sheet, hämta orders, kolla admin)
+        verifyUserWithAppsScript(user);
+        
+      } else {
+        // Användare är utloggad
+        window.currentUserUID = null;
+        window.currentUserEmail = null;
+        
+        document.getElementById("navLoginBtn").style.display = "inline-block";
+        document.getElementById("navLogoutBtn").style.display = "none";
+        document.getElementById("navMinaSidor").style.display = "none";
+        document.getElementById("navAdmin").style.display = "none";
+        document.getElementById("email").value = "";
+      }
+    });
+
+    // Kommunicera med Google Sheets via Apps Script för Auth
+    async function verifyUserWithAppsScript(user) {
+      try {
+        const payload = {
+          action: "auth",
+          uid: user.uid,
+          email: user.email,
+          name: user.displayName || ""
+        };
+
+        const res = await fetch(scriptURL, {
+          method: "POST",
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        
+        // Visa adminlänk om användaren är admin i kalkylarket
+        if(data.isAdmin) {
+          document.getElementById("navAdmin").style.display = "inline-block";
+        } else {
+          document.getElementById("navAdmin").style.display = "none";
+        }
+
+        // Rendera orderhistorik om den finns
+        const historyContainer = document.getElementById("orderHistory");
+        if(data.orders && data.orders.length > 0) {
+          historyContainer.innerHTML = data.orders.map(order => `
+            <div class="order-history-item">
+              <strong>Datum:</strong> ${order.date}<br>
+              <strong>Kräftor:</strong> ${order.amount} kg ${order.type}<br>
+              <strong>Status/Summa:</strong> ${order.total} kr
+            </div>
+          `).join("");
+        } else {
+          historyContainer.innerHTML = "<p>Du har inga tidigare beställningar.</p>";
+        }
+
+      } catch (err) {
+        console.error("Fel vid verifiering mot Apps Script:", err);
+      }
+    }
+
+    // --- 4. BEFINTLIG LOGIK FÖR SIDAN ---
+    let prices = { kokta: 0, levande: 0 };
+    let soldOut = false; 
+
+    // Flik-navigering
+    window.showTab = (e, id) => {
+      document.querySelectorAll(".tab-content").forEach(sec => sec.classList.remove("active"));
+      document.querySelectorAll("nav a").forEach(link => link.classList.remove("active"));
+      document.getElementById(id).classList.add("active");
+      if(e && e.target) e.target.classList.add("active");
+    };
+
+    // Ladda meta data (priser, tillgänglighet)
+    async function loadMeta() {
+      const availableEl = document.getElementById("available");
+      try {
+        const res = await fetch(scriptURL + "?action=getMeta"); // Ny parameter för GET request
+        const data = await res.json();
+
+        availableEl.textContent = data.available;
+        document.getElementById("priceKokta").textContent = data.pricePerKg.kokta;
+        document.getElementById("priceLevande").textContent = data.pricePerKg.levande;
+        prices = data.pricePerKg;
+        document.getElementById("amount").max = data.available || 0;
+
+        const orderKg = document.querySelector('.kg-control');
+        const typeSelect = document.getElementById('type');
+        const totalP = document.querySelector('p.info');
+        const priceP = document.querySelector('#boka > p:nth-of-type(2)');
+        const bookingSubmit = document.querySelector('#bookingForm button[type="submit"]');
+        const notifyBtn = document.getElementById('notifyBtn');
+        const typeLabel = document.querySelector("#type").previousElementSibling;
+        const newsletterLabel = document.querySelector(".newsletter-label");
+        const emailField = document.getElementById("email");
+
+        // Hantera slutsålt-vy
+        if (data.available <= 0) {
+          soldOut = true;
+          // göm kilo-kontroller, typ-val och totalsumma
+          if (orderKg) orderKg.style.display = 'none';
+          if (typeSelect) typeSelect.style.display = 'none';
+          if (totalP) totalP.style.display = 'none';
+          if (priceP) priceP.style.display = 'none';
+          // göm ordinarie "Boka"-knapp (den ligger först i DOM-listan över submit-knappar)
+          if (bookingSubmit) bookingSubmit.style.display = 'none';
+          // visa den enklare submit-knappen för att anmäla sig
+          if (notifyBtn) notifyBtn.style.display = 'block';
+          if (typeLabel) typeLabel.style.display = 'none';
+          if (newsletterLabel) newsletterLabel.style.display = 'none';
+          if (emailField) emailField.placeholder = '';
+
+          // uppdatera status-texten högst upp
+          const statusP = availableEl.parentElement;
+          statusP.innerHTML = '<b>Tyvärr finns inga kräftor tillgängliga just nu. <br><br></b> Fyll i dina uppgifter för att få ett meddelande när nya kräftor finns tillgängliga. <span id="available" style="display:none">0</span>';
+          // markera automatisk att användaren vill ha mail
+          const news = document.getElementById('newsletter'); if (news) news.checked = true;
+        } else {
+          // återställ vy till normal
+          soldOut = false;
+          if (orderKg) orderKg.style.display = '';
+          if (typeSelect) typeSelect.style.display = '';
+          if (totalP) totalP.style.display = '';
+          if (priceP) priceP.style.display = '';
+          if (bookingSubmit) bookingSubmit.style.display = '';
+          if (typeLabel) typeLabel.style.display = '';
+          if (newsletterLabel) newsletterLabel.style.display = '';
+          if (notifyBtn) notifyBtn.style.display = 'none';
+          if (emailField && !window.currentUserEmail) emailField.placeholder = 'Valfritt';
+
+          // återställ status-text
+          const statusP = availableEl.parentElement;
+          statusP.innerHTML = `<b>Tillgängliga kräftor:</b> <span id="available">${data.available}</span> kg <span class="info-label">(1 kg är ca 20 kräftor)</span>`;
+        }
+      } catch (err) {
+        console.error("Fel vid hämtning av meta:", err);
+      }
+    }
+
+    window.changeKg = (step) => {
+      let current = parseFloat(document.getElementById("amount").value) || 0;
+      current = Math.max(0, current + step);
+      document.getElementById("amount").value = current;
+      document.getElementById("kgDisplay").textContent = current.toFixed(1);
+      updateTotal();
+    };
+
+    function updateTotal() {
+      const antal = parseFloat(document.getElementById("amount").value) || 0;
+      const typ = document.getElementById("type").value;
+      document.getElementById("total").textContent = antal * (prices[typ] || 0);
+    }
+
+    document.getElementById("amount").addEventListener("input", updateTotal);
+    document.getElementById("type").addEventListener("change", updateTotal);
+
+    // Skicka bokning
+    document.getElementById("bookingForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      
+      const resultEl = document.getElementById("result");
+      resultEl.textContent = "Skickar...";
+
+      const payload = {
+        action: soldOut ? "notify" : "book",
+        name: document.getElementById("name").value.trim(),
+        phone: document.getElementById("phone").value.trim(),
+        email: document.getElementById("email").value.trim(),
+        newsletter: document.getElementById("newsletter").checked,
+        amount: soldOut ? 0 : parseFloat(document.getElementById("amount").value, 10),
+        type: soldOut ? "" : document.getElementById("type").value,
+        uid: window.currentUserUID // SKICKAR MED UID OM INLOGGAD
+      };
+
+      try {
+        const res = await fetch(scriptURL, { method: "POST", body: JSON.stringify(payload) });
+        const result = await res.json();
+        
+        if (result.success) {
+          document.getElementById("popupText").innerHTML = soldOut 
+            ? "Tack! Vi hör av oss när det finns kräftor." 
+            : `Bokat! Totalt: ${payload.amount * (prices[payload.type] || 0)} kr.`;
+          document.getElementById("popup").style.display = "flex";
+          resultEl.textContent = "";
+          loadMeta();
+        } else {
+          resultEl.textContent = result.error || "Något gick fel.";
+        }
+      } catch (err) {
+        resultEl.textContent = "Fel vid anslutning.";
+      }
+    });
+
+    // justera kravet på epost endast när det inte är "slut"
+    document.getElementById("newsletter").addEventListener("change", function() {
+      const emailField = document.getElementById("email");
+      if (this.checked && !soldOut) {
+        emailField.required = true;
+        if(!window.currentUserEmail) emailField.placeholder = "Obligatorisk om du vill ha nyhetsbrev";
+      } else {
+        emailField.required = false;
+        if(!window.currentUserEmail) emailField.placeholder = "Valfritt";
+      }
+    });
+
+    document.getElementById("year").textContent = new Date().getFullYear();
+    loadMeta();
+  </script>
+</body>
+</html>
