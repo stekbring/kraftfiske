@@ -239,7 +239,7 @@
       
       <!-- Dynamiska Auth-knappar -->
       <a onclick="showTab(event, 'minaSidor')" id="navMinaSidor" style="display:none;">Mina sidor</a>
-      <a href="admin" id="navAdmin" style="display:none; color: #ffeb3b;">Admin</a>
+      <a href="admin.html" id="navAdmin" style="display:none; color: #ffeb3b;">Admin</a>
       <button onclick="openLoginPopup()" id="navLoginBtn" class="login-btn">Logga in</button>
       <button onclick="handleLogout()" id="navLogoutBtn" class="logout-btn" style="display:none;">Logga ut</button>
     </nav>
@@ -378,6 +378,7 @@
     // Byt ut till din nya, uppdaterade URL när vi skrivit Apps Script koden
     const scriptURL = "https://script.google.com/macros/s/AKfycbwT0bOV6v1yQpZW6zmzxigXPwGmCGl9IK7ASeitPiAIgWiZuUoWYIX45bj1APuXnDWulA/exec"; 
     
+
     // Globala variabler för auth
     window.currentUserUID = null;
     window.currentUserEmail = null;
@@ -503,13 +504,24 @@
         // Rendera orderhistorik om den finns
         const historyContainer = document.getElementById("orderHistory");
         if(data.orders && data.orders.length > 0) {
-          historyContainer.innerHTML = data.orders.map(order => `
+          historyContainer.innerHTML = data.orders.map(order => {
+            let dateStr = order.date;
+            try {
+              const d = new Date(order.date);
+              if (!isNaN(d)) {
+                dateStr = d.toLocaleString('sv-SE', {
+                  year: 'numeric', month: '2-digit', day: '2-digit',
+                  hour: '2-digit', minute: '2-digit'
+                });
+              }
+            } catch(e) {}
+            return `
             <div class="order-history-item">
-              <strong>Datum:</strong> ${order.date}<br>
+              <strong>Datum:</strong> ${dateStr}<br>
               <strong>Kräftor:</strong> ${order.amount} kg ${order.type}<br>
               <strong>Status/Summa:</strong> ${order.total} kr
             </div>
-          `).join("");
+          `}).join("");
         } else {
           historyContainer.innerHTML = "<p>Du har inga tidigare beställningar.</p>";
         }
@@ -637,11 +649,32 @@
         const result = await res.json();
         
         if (result.success) {
-          document.getElementById("popupText").innerHTML = soldOut 
-            ? "Tack! Vi hör av oss när det finns kräftor." 
-            : `Bokat! Totalt: ${payload.amount * (prices[payload.type] || 0)} kr.`;
-          document.getElementById("popup").style.display = "flex";
-          resultEl.textContent = "";
+          if (soldOut) {
+            if (result.newsletterStatus === "added") {
+              resultEl.textContent = 'Tack! Du har lagts till på nyhetsbrevet och får ett mail när nya kräftor finns.';
+            } else if (result.newsletterStatus === "exists") {
+              resultEl.textContent = 'Din e-post finns redan i nyhetsbrevslistan. Vi meddelar dig när nya kräftor finns.';
+            } else {
+              resultEl.textContent = "Tack! Vi kontaktar dig när nya kräftor finns tillgängliga.";
+            }
+          } else {
+            const prisText = result.pris 
+              ? `${result.pris} kr`
+              : `${payload.amount * (prices[payload.type] || 0)} kr`;
+
+            let extraText = "";
+            if (result.newsletterStatus === "added") {
+              extraText = "<br><br>Du har lagts till på nyhetslistan och får <br> ett mail när nya kräftor finns.";
+            } else if (result.newsletterStatus === "exists") {
+              extraText = "<br><br>Din e-postadress finns redan i nyhetslistan.";
+            }
+
+            document.getElementById("popupText").innerHTML =
+              `Du har bokat ${payload.amount} kg ${payload.type} kräftor för totalt ${prisText}.<br><br>Bokningsbekräftelse skickas via e-post.${extraText}`;
+
+            document.getElementById("popup").style.display = "flex";
+            resultEl.textContent = "";
+          }
           loadMeta();
         } else {
           resultEl.textContent = result.error || "Något gick fel.";
@@ -665,6 +698,33 @@
 
     document.getElementById("year").textContent = new Date().getFullYear();
     loadMeta();
+
+    let intervalId;
+
+    function startAutoUpdate() {
+      if (!intervalId) {
+        intervalId = setInterval(loadMeta, 3000); // uppdatera varje 3:e sekund
+      }
+    }
+
+    function stopAutoUpdate() {
+      if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+    }
+
+    if (!document.hidden) startAutoUpdate();
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        stopAutoUpdate();
+      } else {
+        loadMeta();
+        startAutoUpdate();
+      }
+    });
+
   </script>
 </body>
 </html>
