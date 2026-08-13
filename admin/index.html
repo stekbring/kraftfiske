@@ -18,15 +18,22 @@
     }
     *{box-sizing:border-box}
     body{
-      margin:0; font-family: 'Times New Roman', Times, serif, Helvetica, sans-serif; background:var(--bg); color:#111; min-height:100vh; display:flex; flex-direction:column;
+      margin:0; font-family: 'Times New Roman', Times, Helvetica, sans-serif, serif; background:var(--bg); color:#111; min-height:100vh; display:flex; flex-direction:column;
     }
-    header{background:var(--header); color:white; padding:14px 18px; display:flex; align-items:center; gap:14px;}
+    header{background:var(--header); color:white; padding:14px 18px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;}
     header img{height:30px}
     header h1{font-size:20px;margin:0}
-    
+
+    /* Navigering mellan Översikt / Nyhetsbrev */
+    .admin-nav { margin-left: auto; display:flex; gap:16px; align-items:center; }
+    .admin-nav a {
+      color:white; text-decoration:none; font-weight:bold; cursor:pointer;
+      padding:4px 2px; border-bottom:2px solid transparent; font-size:14px;
+    }
+    .admin-nav a.active { border-bottom-color:#fff; }
+
     /* Utloggningsknapp i headern */
     .logout-btn {
-      margin-left: auto;
       background: #444;
       color: #fff;
       padding: 6px 12px;
@@ -39,10 +46,15 @@
 
     .wrap{width:95%; max-width:var(--max-width); margin:18px auto 80px;}
 
+    .admin-tab { display:none; }
+    .admin-tab.active { display:block; }
+
     /* Ändrat till en enda kolumn som fyller hela bredden */
     .grid{display:grid; grid-template-columns: 1fr; gap:18px;}
+    .stack{display:flex; flex-direction:column; gap:18px;}
     
-    .card{background:var(--card); border-radius:var(--radius); padding:16px; box-shadow:0 6px 20px rgba(0,0,0,0.12);} 
+    .card{background:var(--card); border-radius:var(--radius); padding:16px; box-shadow:0 6px 20px rgba(0,0,0,0.12); margin-bottom:18px;}
+    .card:last-child{margin-bottom:0;}
 
     /* Dashboard top */
     .stats{display:flex; gap:12px; align-items:stretch}
@@ -52,17 +64,16 @@
 
     /* form styles */
     label{display:block; margin-top:8px; font-size:13px}
-    input[type="text"], input[type="password"], input[type="number"], textarea, select{font-size: 16px; width:100%; padding:8px; margin-top:6px; border:1px solid #ddd; border-radius:6px}
+    input[type="text"], input[type="password"], input[type="number"], input[type="email"], textarea, select{font-size: 16px; width:100%; padding:8px; margin-top:6px; border:1px solid #ddd; border-radius:6px; font-family:inherit;}
+    textarea{resize:vertical;}
     button{background:var(--accent); color:white; border:0; padding:10px 12px; border-radius:8px; cursor:pointer}
+    button:disabled{opacity:0.6; cursor:default;}
 
     /* orders table */
     table{width:100%; border-collapse:collapse; font-size:13px}
     th, td{padding:8px; border-bottom:1px solid #eee; text-align:left}
     th{background:#fafafa}
     .small{font-size:12px;color:var(--muted)}
-
-    /* right column */
-    .right-col{display:flex; flex-direction:column; gap:12px}
 
     .meta-row {
       display: flex;
@@ -104,7 +115,7 @@
       width: 100%;
     }
 
-    #ordersTable {
+    #ordersTable, #subscribersTable {
       width: 100%;
       border-collapse: collapse;
       table-layout: auto;
@@ -207,6 +218,15 @@
     .btn-cancel { background: #6c757d; }
     .edit-actions button:hover { opacity: 0.8; }
 
+    /* Prenumerant-tabell (nyhetsbrev) */
+    #subscribersTable th:first-child, #subscribersTable td:first-child { width:30px; text-align:center; }
+    .sub-actions-view button, .sub-actions-edit button {
+      padding:5px 10px; font-size:12px; border-radius:6px; margin-right:4px; color:#fff; border:none; cursor:pointer;
+    }
+    .edit-sub-btn { background:#444; }
+    .delete-sub-btn { background:#d33; }
+    .sub-check { width:16px; height:16px; }
+
     .google-btn {
       background: #4285F4 !important;
       color: white !important;
@@ -236,7 +256,8 @@
         text-align: center;
       }
       header h1 { margin-top: 8px; }
-      .logout-btn { margin-left: 0; margin-top: 10px; }
+      .admin-nav { margin-left: 0; margin-top: 6px; }
+      .logout-btn { margin-top: 10px; }
     }
     @media (max-width:480px){
       header img{height:48px}
@@ -255,14 +276,14 @@
   <div id="loginScreen" style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; background:#891212; color:#fff;">
     <div style="background:#fff; color:#000; padding:20px; border-radius:10px; width:320px; box-shadow:0 4px 12px rgba(0,0,0,0.3); text-align:center;">
       <h2 style="margin-top:0;">Admin Login</h2>
-      <p style="font-size: 14px; color: #555;">Logga in med ditt auktoriserade konto.</p>
+      <p style="font-size: 14px; color: #555;">Logga in med ditt användarnamn.</p>
       
       <div style="text-align: left; margin-bottom: 15px;">
-        <label style="font-weight: bold;">E-post</label>
-        <input type="email" id="loginEmail" placeholder="admin@exempel.se" style="margin-bottom: 10px; width: 100%; box-sizing: border-box; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+        <label style="font-weight: bold;">Användarnamn</label>
+        <input type="text" id="loginUsername" placeholder="användarnamn" autocomplete="username" style="margin-bottom: 10px; width: 100%; box-sizing: border-box; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
         <label style="font-weight: bold;">Lösenord</label>
-        <input type="password" id="loginPassword" placeholder="••••••••" style="width: 100%; box-sizing: border-box; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
-        <button id="emailLoginBtn" style="width: 100%; margin-top: 15px; background: #891212; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold;">Logga in</button>
+        <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" style="width: 100%; box-sizing: border-box; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+        <button id="passwordLoginBtn" style="width: 100%; margin-top: 15px; background: #891212; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold;">Logga in</button>
       </div>
 
       <hr style="border: 0; border-top: 1px solid #ddd; margin: 20px 0;">
@@ -280,81 +301,141 @@
   <!-- Adminpanel -->
   <div id="appContent" style="display:none;">
     <header>
-      <img src="loggasimpelvit2.png" alt="logo">
+      <img src="loggasimpelvit2.png" alt="logo" width="90" height="30">
       <h1>Adminpanel</h1>
+      <nav class="admin-nav">
+        <a data-tab="dashboardTab" class="active">Översikt</a>
+        <a data-tab="newsletterTab">Nyhetsbrev</a>
+      </nav>
       <button id="logoutBtn" class="logout-btn">Logga ut</button>
     </header>
 
     <div class="wrap">
-      <div class="grid">
-        <div>
-          <div class="card">
-            <div class="stats">
-              <div class="stat">
-                <h3>Tillgängligt</h3>
-                <p id="adminAvailable">— kg</p>
+
+      <!-- === ÖVERSIKT (lager/pris + beställningar) === -->
+      <div id="dashboardTab" class="admin-tab active">
+        <div class="grid">
+          <div>
+            <div class="card">
+              <div class="stats">
+                <div class="stat">
+                  <h3>Tillgängligt</h3>
+                  <p id="adminAvailable">— kg</p>
+                </div>
+                <div class="stat">
+                  <h3>Kokta</h3>
+                  <p id="adminPriceKokta">— kr/kg</p>
+                </div>
+                <div class="stat">
+                  <h3>Levande</h3>
+                  <p id="adminPriceLevande">— kr/kg</p>
+                </div>
               </div>
-              <div class="stat">
-                <h3>Kokta</h3>
-                <p id="adminPriceKokta">— kr/kg</p>
-              </div>
-              <div class="stat">
-                <h3>Levande</h3>
-                <p id="adminPriceLevande">— kr/kg</p>
-              </div>
+
+              <hr style="margin:14px 0">
+
+              <h3>Uppdatera lager & pris</h3>
+              <form id="metaForm">
+                <div class="meta-row">
+                  <div class="meta-item">
+                    <label>Tillgängligt (kg)</label>
+                    <input type="number" step="0.5" id="inputAvailable" min="0">
+                  </div>
+                  <div class="meta-item">
+                    <label>Kokta (kr/kg)</label>
+                    <input type="number" step="1" id="inputPriceKokta" min="0">
+                  </div>
+                  <div class="meta-item">
+                    <label>Levande (kr/kg)</label>
+                    <input type="number" step="1" id="inputPriceLevande" min="0">
+                  </div>
+                </div>
+                <div style="display:flex; gap:8px; margin-top:10px">
+                  <button type="button" id="saveMeta">Spara</button>
+                  <button type="button" id="setSoldOut">Sätt som SLUT</button>
+                </div>
+                <p id="metaResult" class="small muted"></p>
+              </form>
             </div>
+          </div>
 
-            <hr style="margin:14px 0">
+          <div>
+            <div class="card">
+              <h3>Beställningar</h3>
+              <div id="ordersSummary" class="small muted" style="margin-bottom:10px;">
+                Totalt: — kg  ≈ — kräftor  -  — kr
+              </div>
 
-            <h3>Uppdatera lager & pris</h3>
-            <form id="metaForm">
-              <div class="meta-row">
-                <div class="meta-item">
-                  <label>Tillgängligt (kg)</label>
-                  <input type="number" step="0.5" id="inputAvailable" min="0">
-                </div>
-                <div class="meta-item">
-                  <label>Kokta (kr/kg)</label>
-                  <input type="number" step="1" id="inputPriceKokta" min="0">
-                </div>
-                <div class="meta-item">
-                  <label>Levande (kr/kg)</label>
-                  <input type="number" step="1" id="inputPriceLevande" min="0">
-                </div>
-              </div>
-              <div style="display:flex; gap:8px; margin-top:10px">
-                <button type="button" id="saveMeta">Spara</button>
-                <button type="button" id="setSoldOut">Sätt som SLUT</button>
-              </div>
-              <p id="metaResult" class="small muted"></p>
-            </form>
+              <table id="ordersTable">
+                <thead>
+                  <tr>
+                    <th>Datum</th>
+                    <th>Namn</th>
+                    <th>Typ</th>
+                    <th>Kg</th>
+                    <th>Summa (kr)</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+              <p id="ordersResult" class="small muted"></p>
+            </div>
           </div>
         </div>
+      </div>
 
-        <div>
+      <!-- === NYHETSBREV === -->
+      <div id="newsletterTab" class="admin-tab">
+        <div class="stack">
+
           <div class="card">
-            <h3>Beställningar</h3>
-            <div id="ordersSummary" class="small muted" style="margin-bottom:10px;">
-              Totalt: — kg  ≈ — kräftor  -  — kr
+            <h3>Skicka nyhetsbrev</h3>
+            <label>Ämne</label>
+            <input type="text" id="newsletterSubject" placeholder="T.ex. Nu finns nya kräftor!">
+            <label>Meddelande</label>
+            <textarea id="newsletterBody" rows="6" placeholder="Skriv ditt meddelande här..."></textarea>
+            <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
+              <button type="button" id="selectAllBtn">Markera alla</button>
+              <button type="button" id="selectNoneBtn">Avmarkera alla</button>
+              <button type="button" id="sendNewsletterBtn">Skicka nyhetsbrev</button>
             </div>
+            <p class="small muted" style="margin-top:8px;">Skickas som standard till alla i listan nedan - kryssa ur de du vill hoppa över.</p>
+            <p id="newsletterResult" class="small muted"></p>
+          </div>
 
-            <table id="ordersTable">
+          <div class="card">
+            <h3>Lägg till prenumerant</h3>
+            <div class="meta-row">
+              <div class="meta-item"><label>Namn</label><input type="text" id="newSubName"></div>
+              <div class="meta-item"><label>E-post</label><input type="email" id="newSubEmail"></div>
+              <div class="meta-item"><label>Telefon</label><input type="text" id="newSubPhone"></div>
+            </div>
+            <button type="button" id="addSubscriberBtn" style="margin-top:10px;">Lägg till</button>
+            <p id="addSubscriberResult" class="small muted"></p>
+          </div>
+
+          <div class="card">
+            <h3>Prenumeranter (<span id="subscriberCount">0</span>)</h3>
+            <table id="subscribersTable">
               <thead>
                 <tr>
-                  <th>Datum</th>
+                  <th></th>
                   <th>Namn</th>
-                  <th>Typ</th>
-                  <th>Kg</th>
-                  <th>Summa (kr)</th>
-                  <th>Status</th>
+                  <th>E-post</th>
+                  <th>Telefon</th>
+                  <th>Tillagd</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody></tbody>
             </table>
-            <p id="ordersResult" class="small muted"></p>
+            <p id="subscribersResult" class="small muted"></p>
           </div>
+
         </div>
       </div>
+
     </div>
     
     <footer style="text-align:center; padding:18px; color:#fff; background:var(--header); margin-top:26px">
@@ -363,9 +444,9 @@
   </div>
 
   <script type="module">
-    // --- FIREBASE KONFIGURATION ---
+    // --- FIREBASE KONFIGURATION (används endast för "Logga in med Google") ---
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBiACXQ1Axel-nCLcqMWAoNyKq2rXf5M40",
@@ -381,16 +462,18 @@
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
 
-    const scriptURL = "https://script.google.com/macros/s/AKfycbz43XITrJTHmJQpuCx5ofCYEbJArbvdQV0G8T3W6TAHlOAPJUWqxO6JBd1_K8VAfWQxbQ/exec"; 
-
+    const scriptURL = "https://script.google.com/macros/s/AKfycbw3lMwk44T9dlGBCGh_wVjrkM-dZGP72VKKBRKCPaBsJOzWXXwv09t9VD06851quE3GDw/exec"; 
 
     // Globala variabler
     window.currentUserUID = null;
+    window.currentAuthToken = sessionStorage.getItem('adminToken') || null;
     let intervalId = null;
     let orders = [];
+    let subscribers = [];
     let currentSort = { key: "timestamp", asc: false };
     let showAllOrders = false;
     let isInteracting = false; // Förhindrar re-renderings-buggar vid interaktion
+    let lastOrdersHash = null; // Undviker att rita om tabellen när inget ändrats
 
     // DOM-element
     const loginScreen = document.getElementById("loginScreen");
@@ -405,40 +488,83 @@
     const inputPriceLevande = document.getElementById('inputPriceLevande');
     const metaResult = document.getElementById('metaResult');
 
-    // --- FIREBASE AUTHENTICATION LOGIC ---
+    // Skyddar mot hängande nätverksanrop
+    async function fetchWithTimeout(url, options = {}, ms = 8000) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), ms);
+      try {
+        return await fetch(url, { ...options, signal: controller.signal });
+      } finally {
+        clearTimeout(timer);
+      }
+    }
 
-    document.getElementById("emailLoginBtn").addEventListener("click", () => {
-      const email = document.getElementById("loginEmail").value.trim();
-      const password = document.getElementById("loginPassword").value.trim();
-      
-      if (!email || !password) {
-        loginError.textContent = "Fyll i både e-post och lösenord.";
+    // Alla admin-anrop skickar med uid (Firebase) och/eller token (lösenordsinloggning)
+    function authPayload(extra) {
+      return { uid: window.currentUserUID, token: window.currentAuthToken, ...extra };
+    }
+
+    async function callApi(payload, timeoutMs = 8000) {
+      const res = await fetchWithTimeout(scriptURL, { method: "POST", body: JSON.stringify(payload) }, timeoutMs);
+      return res.json();
+    }
+
+    function escapeHtml(str) { 
+      if (str === undefined || str === null) return ''; 
+      return String(str).replace(/[&<>"']/g, function(m){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"})[m]; }); 
+    }
+
+    // --- INLOGGNING MED ANVÄNDARNAMN + LÖSENORD (hanteras i bladet "Användare") ---
+
+    document.getElementById("passwordLoginBtn").addEventListener("click", handlePasswordLogin);
+    document.getElementById("loginPassword").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") handlePasswordLogin();
+    });
+
+    async function handlePasswordLogin() {
+      const username = document.getElementById("loginUsername").value.trim();
+      const password = document.getElementById("loginPassword").value;
+      if (!username || !password) {
+        loginError.textContent = "Fyll i både användarnamn och lösenord.";
         loginError.style.display = "block";
         return;
       }
 
+      const btn = document.getElementById("passwordLoginBtn");
+      btn.disabled = true;
       loginError.style.display = "none";
       loginLoading.textContent = "Loggar in...";
       loginLoading.style.display = "block";
 
-      signInWithEmailAndPassword(auth, email, password).catch((error) => {
+      try {
+        const data = await callApi({ action: "login", username, password });
         loginLoading.style.display = "none";
-        loginError.textContent = "Fel e-post eller lösenord.";
+        if (data.success) {
+          window.currentUserUID = username;
+          window.currentAuthToken = data.token;
+          sessionStorage.setItem('adminToken', data.token);
+          sessionStorage.setItem('adminUsername', username);
+          await enterAdminPanel();
+        } else {
+          loginError.textContent = data.error || "Fel användarnamn eller lösenord.";
+          loginError.style.display = "block";
+        }
+      } catch (err) {
+        loginLoading.style.display = "none";
+        loginError.textContent = "Nätverksfel vid inloggning.";
         loginError.style.display = "block";
-      });
-    });
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // --- GOOGLE-INLOGGNING (Firebase) ---
 
     document.getElementById("googleLoginBtn").addEventListener("click", () => {
       loginError.style.display = "none";
       signInWithPopup(auth, provider).catch((error) => {
         loginError.textContent = "Inloggning avbröts eller misslyckades.";
         loginError.style.display = "block";
-      });
-    });
-
-    document.getElementById("logoutBtn").addEventListener("click", () => {
-      signOut(auth).then(() => {
-        stopAutoUpdate();
       });
     });
 
@@ -449,19 +575,11 @@
         loginError.style.display = "none";
         
         try {
-          const res = await fetch(scriptURL, {
-            method: "POST",
-            body: JSON.stringify({ action: "auth", uid: user.uid, email: user.email })
-          });
-          const data = await res.json();
-
+          const data = await callApi({ action: "auth", uid: user.uid, email: user.email });
           loginLoading.style.display = "none";
 
           if (data.isAdmin) {
-            loginScreen.style.display = "none";
-            appContent.style.display = "block";
-            await init();
-            startAutoUpdate();
+            await enterAdminPanel();
           } else {
             loginError.textContent = "Åtkomst nekad. Ditt konto saknar administratörsbehörighet.";
             loginError.style.display = "block";
@@ -473,7 +591,8 @@
           loginError.style.display = "block";
           signOut(auth);
         }
-      } else {
+      } else if (!window.currentAuthToken) {
+        // Visa bara inloggningsskärmen om vi inte redan är inloggade via användarnamn/lösenord
         window.currentUserUID = null;
         loginScreen.style.display = "flex";
         appContent.style.display = "none";
@@ -481,32 +600,135 @@
       }
     });
 
-    // --- ADMIN PANEL LOGIC ---
+    // --- GEMENSAM INLOGGNING / UTLOGGNING ---
 
-    async function init() {
-      await Promise.all([loadMeta(), loadOrders()]);
+    async function enterAdminPanel() {
+      loginScreen.style.display = "none";
+      appContent.style.display = "block";
+      await init();
+      startAutoUpdate();
     }
 
-    async function loadMeta() {
+    function handleAuthExpired() {
+      stopAutoUpdate();
+      sessionStorage.removeItem('adminToken');
+      sessionStorage.removeItem('adminUsername');
+      window.currentAuthToken = null;
+      window.currentUserUID = null;
+      loginScreen.style.display = "flex";
+      appContent.style.display = "none";
+      loginError.textContent = "Sessionen har gått ut. Logga in igen.";
+      loginError.style.display = "block";
+    }
+
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      stopAutoUpdate();
+      if (window.currentAuthToken) {
+        try { await callApi({ action: "logout", token: window.currentAuthToken }); } catch (e) {}
+      }
+      sessionStorage.removeItem('adminToken');
+      sessionStorage.removeItem('adminUsername');
+      window.currentAuthToken = null;
+      window.currentUserUID = null;
+      if (auth.currentUser) {
+        await signOut(auth); // triggar onAuthStateChanged -> visar inloggningsskärmen
+      } else {
+        loginScreen.style.display = "flex";
+        appContent.style.display = "none";
+      }
+    });
+
+    // Återuppta sparad session (användarnamn/lösenord) om sidan laddas om
+    (async function tryResumeSession() {
+      if (window.currentAuthToken) {
+        window.currentUserUID = sessionStorage.getItem('adminUsername') || 'admin';
+        await enterAdminPanel();
+      }
+    })();
+
+    // --- FLIKAR ---
+
+    document.querySelectorAll(".admin-nav a").forEach(link => {
+      link.addEventListener("click", () => {
+        const id = link.dataset.tab;
+        document.querySelectorAll(".admin-tab").forEach(t => t.classList.remove("active"));
+        document.querySelectorAll(".admin-nav a").forEach(a => a.classList.remove("active"));
+        document.getElementById(id).classList.add("active");
+        link.classList.add("active");
+      });
+    });
+
+    // --- ADMIN PANEL LOGIC (Översikt) ---
+
+    async function init() {
+      await Promise.all([loadDashboard(), loadSubscribers(), loadNewsletterTemplate()]);
+    }
+
+    // Hämtar den förberedda standardtexten (från appscriptet) och förifyller
+    // ämne/meddelande i nyhetsbrevsformuläret, så att admin bara behöver
+    // ändra den om hen vill innan utskick.
+    async function loadNewsletterTemplate() {
       if (!window.currentUserUID) return;
       try {
-        const res = await fetch(scriptURL, {
-          method: "POST",
-          body: JSON.stringify({ action: "getMeta", uid: window.currentUserUID })
-        });
-        const json = await res.json();
-        if (json.success) {
-          adminAvailable.textContent = json.available + " kg";
-          adminPriceKokta.textContent = json.prices.kokta + " kr/kg";
-          adminPriceLevande.textContent = json.prices.levande + " kr/kg";
-
-          if(document.activeElement !== inputAvailable) inputAvailable.value = json.available;
-          if(document.activeElement !== inputPriceKokta) inputPriceKokta.value = json.prices.kokta;
-          if(document.activeElement !== inputPriceLevande) inputPriceLevande.value = json.prices.levande;
+        const data = await callApi(authPayload({ action: "getNewsletterTemplate" }));
+        if (data.success) {
+          const subjectEl = document.getElementById("newsletterSubject");
+          const bodyEl = document.getElementById("newsletterBody");
+          if (!subjectEl.value) subjectEl.value = data.subject || "";
+          if (!bodyEl.value) bodyEl.value = data.body || "";
         }
       } catch (err) {
         console.error(err);
       }
+    }
+
+    // Kombinerar lager/pris + beställningar i ETT anrop (var tidigare två separata)
+    async function loadDashboard() {
+      if (!window.currentUserUID) return;
+      try {
+        const data = await callApi(authPayload({ action: "getDashboard" }));
+        if (!data.success) {
+          if (data.error === "Behörighet saknas") handleAuthExpired();
+          return;
+        }
+
+        adminAvailable.textContent = data.available + " kg";
+        adminPriceKokta.textContent = data.prices.kokta + " kr/kg";
+        adminPriceLevande.textContent = data.prices.levande + " kr/kg";
+
+        if (document.activeElement !== inputAvailable) inputAvailable.value = data.available;
+        if (document.activeElement !== inputPriceKokta) inputPriceKokta.value = data.prices.kokta;
+        if (document.activeElement !== inputPriceLevande) inputPriceLevande.value = data.prices.levande;
+
+        if (isInteracting) return; // rör inte ordertabellen medan admin redigerar/har en meny öppen
+
+        const newOrders = data.orders.map(o => ({
+          ...o,
+          delivered: o.delivered === true || (o.delivered || "").toString().toLowerCase() === "levererad"
+        }));
+
+        // Rita bara om tabellen om datan faktiskt ändrats (undviker flimmer/onödigt DOM-arbete var 10:e sekund)
+        const newHash = JSON.stringify(newOrders);
+        if (newHash === lastOrdersHash) return;
+        lastOrdersHash = newHash;
+
+        orders = newOrders;
+        sortOrdersInPlace();
+        renderOrders(orders);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function sortOrdersInPlace() {
+      orders.sort((a, b) => {
+        let av = a[currentSort.key], bv = b[currentSort.key];
+        if (currentSort.key === "kg" || currentSort.key === "total") { av = parseFloat(av); bv = parseFloat(bv); }
+        if (currentSort.key === "timestamp") { av = new Date(av); bv = new Date(bv); }
+        if (av < bv) return currentSort.asc ? -1 : 1;
+        if (av > bv) return currentSort.asc ? 1 : -1;
+        return 0;
+      });
     }
 
     document.getElementById("saveMeta").addEventListener("click", async () => {
@@ -517,20 +739,10 @@
       metaResult.textContent = "Sparar...";
 
       try {
-        const res = await fetch(scriptURL, {
-          method: "POST",
-          body: JSON.stringify({
-            action: "updateMeta",
-            uid: window.currentUserUID,
-            available,
-            priceKokta,
-            priceLevande
-          })
-        });
-        const json = await res.json();
+        const json = await callApi(authPayload({ action: "updateMeta", available, priceKokta, priceLevande }));
         if (json.success) {
           metaResult.textContent = "Uppdaterat!";
-          await loadMeta();
+          await loadDashboard();
           setTimeout(() => metaResult.textContent = "", 3000);
         } else {
           metaResult.textContent = "Fel: " + (json.error || "Okänt");
@@ -545,13 +757,9 @@
       metaResult.textContent = "Uppdaterar...";
 
       try {
-        const res = await fetch(scriptURL, {
-          method: "POST",
-          body: JSON.stringify({ action: "setSoldOut", uid: window.currentUserUID })
-        });
-        const json = await res.json();
+        const json = await callApi(authPayload({ action: "setSoldOut" }));
         if (json.success) {
-          await loadMeta();
+          await loadDashboard();
           metaResult.textContent = "Markerat som SLUT!";
           setTimeout(() => metaResult.textContent = "", 3000);
         } else {
@@ -561,46 +769,6 @@
         metaResult.textContent = "Fel vid uppdatering.";
       }
     });
-
-    function escapeHtml(str) { 
-      if (!str) return ''; 
-      return String(str).replace(/[&<>"']/g, function(m){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"})[m]; }); 
-    }
-
-    async function loadOrders() {
-      if (!window.currentUserUID) return;
-      try {
-        const res = await fetch(scriptURL, {
-          method: "POST",
-          body: JSON.stringify({ action: "getOrders", uid: window.currentUserUID })
-        });
-        const json = await res.json();
-
-        if (json.success) {
-          if (isInteracting) return; // Uppdatera inte lokala arrayen och rendera inte om när vi ändrar saker
-
-          orders = json.orders.map(o => ({
-            ...o,
-            delivered: o.delivered === true || (o.delivered || "").toString().toLowerCase() === "levererad"
-          }));
-
-          orders.sort((a, b) => {
-            let av = a[currentSort.key], bv = b[currentSort.key];
-            if(currentSort.key === "kg" || currentSort.key === "total") { av = parseFloat(av); bv = parseFloat(bv); }
-            if(currentSort.key === "timestamp") { av = new Date(av); bv = new Date(bv); }
-            if(av < bv) return currentSort.asc ? -1 : 1;
-            if(av > bv) return currentSort.asc ? 1 : -1;
-            return 0;
-          });
-
-          renderOrders(orders);
-        } else {
-          document.getElementById("ordersResult").textContent = "Kunde inte hämta beställningar.";
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    }
 
     function renderOrders(data) {
       const tbody = document.querySelector("#ordersTable tbody");
@@ -638,8 +806,8 @@
           <td>${escapeHtml(tidKort)}</td>
           <td class="editable" data-field="name">${escapeHtml(order.name)}</td>
           <td class="editable" data-field="type">${escapeHtml(order.type)}</td>
-          <td class="editable" data-field="kg">${order.kg}</td>
-          <td class="editable" data-field="total">${order.total}</td>
+          <td class="editable" data-field="kg">${escapeHtml(String(order.kg))}</td>
+          <td class="editable" data-field="total">${escapeHtml(String(order.total))}</td>
           <td style="position: relative;" class="action-cell">
             <button class="status-btn ${statusColor}" data-id="${order.id}" data-status="${order.delivered}">
               ${statusText}
@@ -676,12 +844,10 @@
             dropdown.style.display = "block";
             td.classList.add("active-menu");
             isInteracting = true;
-            stopAutoUpdate();
           } else {
             dropdown.style.display = "none";
             td.classList.remove("active-menu");
             isInteracting = false;
-            startAutoUpdate();
           }
         });
 
@@ -689,24 +855,22 @@
         tr.querySelector(".delete-order-btn").addEventListener("click", async () => {
           if (!confirm("Ta bort denna beställning?")) return;
           isInteracting = true;
-          stopAutoUpdate();
           
           const id = order.id;
-          const res = await fetch(scriptURL, {
-            method: "POST",
-            body: JSON.stringify({ action: "deleteOrder", uid: window.currentUserUID, id })
-          });
-          const json = await res.json();
-          
-          isInteracting = false;
-          startAutoUpdate();
-          if (json.success) loadOrders();
+          try {
+            const json = await callApi(authPayload({ action: "deleteOrder", id }));
+            isInteracting = false;
+            if (json.success) { lastOrdersHash = null; loadDashboard(); }
+            else alert("Fel: " + (json.error || "Okänt"));
+          } catch (err) {
+            isInteracting = false;
+            alert("Nätverksfel vid borttagning.");
+          }
         });
 
         // Redigera-knappen aktiverad
         tr.querySelector(".edit-order-btn").addEventListener("click", () => {
           isInteracting = true;
-          stopAutoUpdate();
 
           // Dölj meny och status, visa Spara/Avbryt
           tr.querySelector('.status-btn').style.display = 'none';
@@ -732,7 +896,6 @@
         // Avbryt
         tr.querySelector(".btn-cancel").addEventListener("click", () => {
           isInteracting = false;
-          startAutoUpdate();
           renderOrders(orders); // Laddar om lokala datan för att ta bort fälten
         });
 
@@ -750,29 +913,20 @@
           });
 
           try {
-            const res = await fetch(scriptURL, {
-              method: "POST",
-              body: JSON.stringify({
-                action: "editOrder",
-                uid: window.currentUserUID,
-                id: order.id,
-                ...updates
-              })
-            });
-
-            const json = await res.json();
+            const json = await callApi(authPayload({ action: "editOrder", id: order.id, ...updates }));
             
             isInteracting = false;
-            startAutoUpdate();
 
             if (json.success) {
-              loadOrders();
+              lastOrdersHash = null;
+              loadDashboard();
             } else {
               alert("Fel vid uppdatering: " + (json.error || ""));
               btn.textContent = "Spara";
               btn.disabled = false;
             }
           } catch(err) {
+            isInteracting = false;
             alert("Nätverksfel vid sparande");
             btn.textContent = "Spara";
             btn.disabled = false;
@@ -802,7 +956,6 @@
       document.querySelectorAll(".status-btn").forEach(btn => {
         btn.addEventListener("click", async () => {
           isInteracting = true;
-          stopAutoUpdate();
 
           const id = btn.dataset.id;
           const current = btn.dataset.status === "true";
@@ -813,16 +966,7 @@
           btn.disabled = true;
 
           try {
-            const res = await fetch(scriptURL, {
-              method: "POST",
-              body: JSON.stringify({
-                action: "updateOrderStatus",
-                uid: window.currentUserUID,
-                id,
-                delivered: newStatus
-              })
-            });
-            const json = await res.json();
+            const json = await callApi(authPayload({ action: "updateOrderStatus", id, delivered: newStatus }));
             if (json.success) {
               btn.textContent = newStatus ? "Levererad" : "Ej levererad";
               btn.classList.toggle("green", newStatus);
@@ -830,6 +974,7 @@
               btn.dataset.status = newStatus;
               const orderIndex = orders.findIndex(o => o.id == id);
               if (orderIndex !== -1) orders[orderIndex].delivered = newStatus;
+              lastOrdersHash = JSON.stringify(orders);
             } else {
               btn.textContent = "Fel!";
               setTimeout(() => { btn.textContent = originalText; }, 1000);
@@ -840,7 +985,6 @@
           } finally {
             btn.disabled = false;
             isInteracting = false;
-            startAutoUpdate();
           }
         });
       });
@@ -865,15 +1009,8 @@
             headers.forEach(h => h.classList.remove("asc","desc"));
             th.classList.add(currentSort.asc ? "asc" : "desc");
             
-            const sorted = [...orders].sort((a,b)=>{
-              let av=a[key], bv=b[key];
-              if(key==="kg"||key==="total") {av=parseFloat(av);bv=parseFloat(bv);}
-              if(key==="timestamp") {av=new Date(av);bv=new Date(bv);}
-              if(av<bv) return currentSort.asc?-1:1;
-              if(av>bv) return currentSort.asc?1:-1;
-              return 0;
-            });
-            renderOrders(sorted);
+            sortOrdersInPlace();
+            renderOrders(orders);
           };
         }
       });
@@ -888,7 +1025,6 @@
       
       if (anyOpen && !document.querySelector(".inline-edit") && window.currentUserUID) {
         isInteracting = false;
-        startAutoUpdate();
       }
     });
 
@@ -896,12 +1032,194 @@
       document.getElementById("year").textContent = new Date().getFullYear();
     });
 
+    // --- NYHETSBREV ---
+
+    async function loadSubscribers() {
+      if (!window.currentUserUID) return;
+      try {
+        const data = await callApi(authPayload({ action: "getSubscribers" }));
+        if (data.success) {
+          subscribers = data.subscribers;
+          renderSubscribers();
+        } else if (data.error === "Behörighet saknas") {
+          handleAuthExpired();
+        } else {
+          document.getElementById("subscribersResult").textContent = "Kunde inte hämta prenumeranter.";
+        }
+      } catch (err) {
+        console.error(err);
+        document.getElementById("subscribersResult").textContent = "Nätverksfel vid hämtning av prenumeranter.";
+      }
+    }
+
+    function renderSubscribers() {
+      const tbody = document.querySelector("#subscribersTable tbody");
+      tbody.innerHTML = "";
+      document.getElementById("subscriberCount").textContent = subscribers.length;
+
+      subscribers.forEach(sub => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><input type="checkbox" class="sub-check" data-id="${sub.id}" checked></td>
+          <td class="editable" data-field="name">${escapeHtml(sub.name)}</td>
+          <td class="editable" data-field="email">${escapeHtml(sub.email)}</td>
+          <td class="editable" data-field="phone">${escapeHtml(sub.phone)}</td>
+          <td>${escapeHtml(sub.added)}</td>
+          <td style="white-space:nowrap;">
+            <span class="sub-actions-view">
+              <button type="button" class="edit-sub-btn">Redigera</button>
+              <button type="button" class="delete-sub-btn">Ta bort</button>
+            </span>
+            <span class="sub-actions-edit" style="display:none;">
+              <button type="button" class="cancel-sub-btn btn-cancel">Avbryt</button>
+              <button type="button" class="save-sub-btn btn-save">Spara</button>
+            </span>
+          </td>
+        `;
+        tbody.appendChild(tr);
+
+        const viewActions = tr.querySelector(".sub-actions-view");
+        const editActions = tr.querySelector(".sub-actions-edit");
+        const editableCells = tr.querySelectorAll(".editable");
+
+        tr.querySelector(".delete-sub-btn").addEventListener("click", async () => {
+          if (!confirm(`Ta bort ${sub.email} från listan?`)) return;
+          try {
+            const json = await callApi(authPayload({ action: "deleteSubscriber", id: sub.id }));
+            if (json.success) loadSubscribers();
+            else alert("Fel: " + (json.error || "Okänt"));
+          } catch (err) {
+            alert("Nätverksfel vid borttagning.");
+          }
+        });
+
+        tr.querySelector(".edit-sub-btn").addEventListener("click", () => {
+          viewActions.style.display = "none";
+          editActions.style.display = "inline";
+          editableCells.forEach(td => {
+            const original = td.textContent.trim();
+            const input = document.createElement("input");
+            input.type = "text";
+            input.className = "inline-edit";
+            input.value = original;
+            td.textContent = "";
+            td.appendChild(input);
+          });
+        });
+
+        tr.querySelector(".cancel-sub-btn").addEventListener("click", () => {
+          renderSubscribers();
+        });
+
+        tr.querySelector(".save-sub-btn").addEventListener("click", async (e) => {
+          const btn = e.target;
+          btn.disabled = true;
+          btn.textContent = "Sparar...";
+
+          const updates = {};
+          editableCells.forEach(td => {
+            const field = td.dataset.field;
+            const input = td.querySelector("input");
+            if (input) updates[field] = input.value.trim();
+          });
+
+          try {
+            const json = await callApi(authPayload({ action: "updateSubscriber", id: sub.id, ...updates }));
+            if (json.success) {
+              loadSubscribers();
+            } else {
+              alert("Fel: " + (json.error || "Okänt"));
+              btn.disabled = false;
+              btn.textContent = "Spara";
+            }
+          } catch (err) {
+            alert("Nätverksfel vid sparande.");
+            btn.disabled = false;
+            btn.textContent = "Spara";
+          }
+        });
+      });
+    }
+
+    document.getElementById("addSubscriberBtn").addEventListener("click", async () => {
+      const name = document.getElementById("newSubName").value.trim();
+      const email = document.getElementById("newSubEmail").value.trim();
+      const phone = document.getElementById("newSubPhone").value.trim();
+      const resultEl = document.getElementById("addSubscriberResult");
+      if (!email) { resultEl.textContent = "E-post krävs."; return; }
+
+      const btn = document.getElementById("addSubscriberBtn");
+      btn.disabled = true;
+      resultEl.textContent = "Lägger till...";
+      try {
+        const json = await callApi(authPayload({ action: "addSubscriber", name, email, phone }));
+        if (json.success) {
+          resultEl.textContent = "Tillagd!";
+          document.getElementById("newSubName").value = "";
+          document.getElementById("newSubEmail").value = "";
+          document.getElementById("newSubPhone").value = "";
+          await loadSubscribers();
+          setTimeout(() => resultEl.textContent = "", 3000);
+        } else {
+          resultEl.textContent = "Fel: " + (json.error || "Okänt");
+        }
+      } catch (err) {
+        resultEl.textContent = "Nätverksfel.";
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    document.getElementById("selectAllBtn").addEventListener("click", () => {
+      document.querySelectorAll(".sub-check").forEach(cb => cb.checked = true);
+    });
+    document.getElementById("selectNoneBtn").addEventListener("click", () => {
+      document.querySelectorAll(".sub-check").forEach(cb => cb.checked = false);
+    });
+
+    document.getElementById("sendNewsletterBtn").addEventListener("click", async () => {
+      const subject = document.getElementById("newsletterSubject").value.trim();
+      const body = document.getElementById("newsletterBody").value.trim();
+      const resultEl = document.getElementById("newsletterResult");
+      if (!subject || !body) { resultEl.textContent = "Fyll i både ämne och meddelande."; return; }
+
+      const checked = Array.from(document.querySelectorAll(".sub-check:checked")).map(cb => Number(cb.dataset.id));
+      if (checked.length === 0) { resultEl.textContent = "Välj minst en mottagare."; return; }
+
+      const totalSubs = subscribers.length;
+      const confirmMsg = checked.length === totalSubs
+        ? `Skicka till alla ${totalSubs} prenumeranter?`
+        : `Skicka till ${checked.length} av ${totalSubs} prenumeranter?`;
+      if (!confirm(confirmMsg)) return;
+
+      const btn = document.getElementById("sendNewsletterBtn");
+      btn.disabled = true;
+      resultEl.textContent = "Skickar... kan ta upp till någon minut om ni har många prenumeranter.";
+      try {
+        const json = await callApi(
+          authPayload({ action: "sendNewsletter", subject, body, recipientIds: checked }),
+          120000 // 2 minuter - utskick till flera mottagare tar längre tid än vanliga anrop
+        );
+        if (json.success) {
+          let msg = `Skickat till ${json.sent} av ${json.totalRequested}.`;
+          if (json.failed) msg += ` ${json.failed} misslyckades.`;
+          if (json.skippedDueToQuota) msg += ` ${json.skippedDueToQuota} kunde inte skickas (dagskvoten nådd).`;
+          resultEl.textContent = msg;
+        } else {
+          resultEl.textContent = "Fel: " + (json.error || "Okänt");
+        }
+      } catch (err) {
+        resultEl.textContent = "Nätverksfel vid utskick.";
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    // --- AUTO-UPPDATERING ---
+
     function startAutoUpdate() {
       if (!intervalId && window.currentUserUID) {
-        intervalId = setInterval(() => {
-          loadMeta();
-          loadOrders();
-        }, 5000);
+        intervalId = setInterval(loadDashboard, 10000); // ett kombinerat anrop var 10:e sekund
       }
     }
 
@@ -916,8 +1234,7 @@
       if (document.hidden) {
         stopAutoUpdate();
       } else if (window.currentUserUID) {
-        loadMeta();
-        loadOrders();
+        loadDashboard();
         startAutoUpdate();
       }
     });

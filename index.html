@@ -18,7 +18,7 @@
   <style>
     body {
       margin: 0;
-      font-family: 'Times New Roman', Times, serif, Helvetica, sans-serif;
+      font-family: 'Times New Roman', Times, Helvetica, sans-serif, serif;
       background: #891212;
       display: flex;
       flex-direction: column;
@@ -216,7 +216,7 @@
 </head>
 <body>
   <header>
-    <img src="loggasimpelvit2.png" alt="Olles Fishing Company">
+    <img src="loggasimpelvit2.png" alt="Olles Fishing Company" width="150" height="50">
     <h1>Olle & Maltes Fiske</h1>
     <nav>
       <a onclick="showTab(event, 'boka')" class="active">Köp</a>
@@ -229,7 +229,7 @@
     <section id="boka" class="tab-content active">
       <h2>Köp kräftor</h2>
       <p><b>Tillgängliga kräftor:</b> <span id="available">....</span> kg <span class="info-label">(1 kg är ca 20 kräftor)</span></p>
-      <p><b>Pris per kg:</b> Kokta: <span id="priceKokta">....</span> kr, Levande: <span id="priceLevande">....</span> kr</p>
+      <p id="priceInfo"><b>Pris per kg:</b> Kokta: <span id="priceKokta">....</span> kr, Levande: <span id="priceLevande">....</span> kr</p>
 
       <form id="bookingForm">
         <label>Namn</label>
@@ -294,7 +294,7 @@
   </div>
 
   <script>
-    const scriptURL = "https://script.google.com/macros/s/AKfycbzEmSu26uOwn_frawYfIUEJxAZITYvipuPwFjJireEeo9ZC93YTsLzUeonp604D_R7iHQ/exec"; 
+    const scriptURL = "https://script.google.com/macros/s/AKfycbw3lMwk44T9dlGBCGh_wVjrkM-dZGP72VKKBRKCPaBsJOzWXXwv09t9VD06851quE3GDw/exec"; 
     let prices = { kokta: 0, levande: 0 };
     let soldOut = false; // true när det är slut på kräftor
     let lastAvailable = null;
@@ -302,13 +302,31 @@
     let lastPriceLevande = null;
     let firstLoad = true;
 
+    // Skyddar mot hängande nätverksanrop genom att avbryta efter en viss tid
+    async function fetchWithTimeout(url, options = {}, ms = 8000) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), ms);
+      try {
+        return await fetch(url, { ...options, signal: controller.signal });
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+
+    // Skyddar mot race conditions: om ett nytt loadMeta()-anrop startar
+    // innan ett äldre hunnit svara, ignoreras det äldre svaret.
+    let loadMetaRequestId = 0;
+
     async function loadMeta() {
+      const myRequestId = ++loadMetaRequestId;
       const availableEl = document.getElementById("available");
       try {
-        const res = await fetch(scriptURL);
+        const res = await fetchWithTimeout(scriptURL);
         const data = await res.json();
-        // --- visa "...." bara första gången ---
-        const availableEl = document.getElementById("available");
+
+        // Om ett nyare anrop redan har startat, kasta det här (gamla) svaret
+        if (myRequestId !== loadMetaRequestId) return;
+
         const priceKoktaEl = document.getElementById("priceKokta");
         const priceLevandeEl = document.getElementById("priceLevande");
 
@@ -346,7 +364,7 @@
         const orderKg = document.querySelector('.kg-control');
         const typeSelect = document.getElementById('type');
         const totalP = document.querySelector('p.info');
-        const priceP = document.querySelector('#boka > p:nth-of-type(2)');
+        const priceP = document.getElementById('priceInfo');
         const bookingSubmit = document.querySelector('#bookingForm button[type="submit"]');
         const notifyBtn = document.getElementById('notifyBtn');
         const typeLabel = document.querySelector("#type").previousElementSibling;
@@ -392,7 +410,11 @@
         }
 
       } catch (err) {
-        availableEl.textContent = "Fel vid hämtning!";
+        // Ignorera fel från gamla, redan överspelade anrop
+        if (myRequestId !== loadMetaRequestId) return;
+        availableEl.textContent = err.name === "AbortError"
+          ? "Kunde inte hämta data (timeout). Försöker igen snart..."
+          : "Fel vid hämtning!";
         console.error(err);
       }
     }
@@ -419,6 +441,12 @@
     document.getElementById("bookingForm").addEventListener("submit", async (e) => {
       e.preventDefault();
 
+      // Förhindra dubbelbokning om användaren klickar flera gånger snabbt
+      const submitButtons = e.currentTarget.querySelectorAll('button[type="submit"]');
+      submitButtons.forEach(btn => btn.disabled = true);
+
+      try {
+
       // Om slut på kräftor: skicka bara anmälan om nyhetsbrev (namn + epost eller telefonnummer)
       if (soldOut) {
         const name = document.getElementById("name").value.trim();
@@ -428,10 +456,10 @@
         if (!name) { resultEl.textContent = 'Fyll i ditt namn.'; return; }
         if (!phone && !email) { resultEl.textContent = 'Fyll i e-post eller telefonnummer så vi kan kontakta dig.'; return; }
 
-        const notifyPayload = { name, phone, email, newsletter: true };
+        const notifyPayload = { action: "notify", name: name, phone: phone, email: email, newsletter: true };
         resultEl.textContent = 'Skickar anmälan...';
         try {
-          const res = await fetch(scriptURL, { method: "POST", body: JSON.stringify(notifyPayload) });
+          const res = await fetchWithTimeout(scriptURL, { method: "POST", body: JSON.stringify(notifyPayload) });
           const parsed = await res.json();
           if (parsed && parsed.success) {
             if (parsed.newsletterStatus === "added") {
@@ -454,18 +482,19 @@
 
       // --- vanlig bokningslogik (oförändrad) ---
       const booking = {
+        action: "book",
         name: document.getElementById("name").value.trim(),
         phone: document.getElementById("phone").value.trim(),
         email: document.getElementById("email").value.trim(),
         newsletter: document.getElementById("newsletter").checked,
-        amount: parseFloat(document.getElementById("amount").value, 10),
+        amount: parseFloat(document.getElementById("amount").value),
         type: document.getElementById("type").value
       };
 
       const resultEl = document.getElementById("result");
       resultEl.textContent = "Skickar bokning...";
       try {
-        const res = await fetch(scriptURL, {
+        const res = await fetchWithTimeout(scriptURL, {
           method: "POST",
           body: JSON.stringify(booking)
         });
@@ -501,6 +530,10 @@
         resultEl.textContent = "Fel vid bokning!";
         console.error(err);
       }
+
+      } finally {
+        submitButtons.forEach(btn => btn.disabled = false);
+      }
     });
 
     function closePopup() {
@@ -533,7 +566,7 @@
 
     function startAutoUpdate() {
       if (!intervalId) {
-        intervalId = setInterval(loadMeta, 3000); // uppdatera varje sekund när sidan är aktiv
+        intervalId = setInterval(loadMeta, 12000); // uppdatera var 12:e sekund när sidan är aktiv (skonar Apps Script-kvoten)
       }
     }
 
