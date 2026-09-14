@@ -1,0 +1,616 @@
+// ===== KONFIG =====
+const SETTINGS_SHEET = "Tillgängliga kräftor"; 
+const BOOKINGS_SHEET = "Beställningar";        
+const NEWS_SHEET = "Nyhetslista";              
+const AVAILABLE_CELL = "A2";                   
+const PRICE_LEVANDE_CELL = "B2";               
+const PRICE_KOKTA_CELL   = "C2";               
+const USERS_SHEET = "Användare";
+
+// Kolumner i "Användare"-bladet:
+//   A: UID          (Firebase-inloggning, lämna tomt för lösenordskonton)
+//   B: E-post        (Firebase-inloggning)
+//   C: Namn
+//   D: Skapad
+//   E: Admin ("Ja"/"Nej")
+//   F: Användarnamn (NYTT - för inloggning med användarnamn/lösenord)
+//   G: Lösenord     (NYTT - för inloggning med användarnamn/lösenord)
+//
+// För att lägga till en ny admin: fyll i Namn, Admin="Ja", Användarnamn och
+// Lösenord. UID/E-post kan lämnas tomma om kontot bara ska logga in med
+// användarnamn och lösenord.
+
+// ===== Pushover-konfig =====
+const PUSHOVER_USER  = "ua37wbbx89zgczcx3k8cbvjkwuzrm7";   // byt ut mot ditt User Key
+const PUSHOVER_TOKEN = "aunx1sqvehwpxn54j88gvyfxo6pqqd";   // byt ut mot ditt API Token
+
+// ===== NYHETSBREV: FÖRIFYLLD STANDARDTEXT =====
+// Ändra de här två raderna till den text du vill ha förifylld i adminpanelens
+// nyhetsbrevsformulär när du öppnar fliken. Du kan alltid skriva över texten
+// manuellt innan du skickar - det här är bara en bekväm startpunkt.
+const DEFAULT_NEWSLETTER_SUBJECT = "Nu finns det kräftor hos Olles Fiske!";
+const DEFAULT_NEWSLETTER_BODY =
+`Hej!
+
+Nu finns det färska kräftor tillgängliga igen. Boka snabbt innan de tar slut!
+
+Gå in på kopkraftor.se för att boka din mängd.
+
+Vänliga hälsningar,
+Olles Fiske`;
+
+// ===== HJÄLPFUNKTIONER =====
+function getAvailable_() {
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SETTINGS_SHEET);
+  return Number(sh.getRange(AVAILABLE_CELL).getValue()) || 0;
+}
+
+function getPrices_() {
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SETTINGS_SHEET);
+  return {
+    levande: Number(sh.getRange(PRICE_LEVANDE_CELL).getValue()) || 0,
+    kokta: Number(sh.getRange(PRICE_KOKTA_CELL).getValue()) || 0
+  };
+}
+
+// Cachad, skrivskyddad version av lager+pris - används ENDAST av den
+// publika doGet() som pollas ofta av kundsidan. Bokningslogiken (handleBook_)
+// använder alltid getAvailable_()/getPrices_() direkt (ocachat) så att
+// lagersaldot aldrig blir fel vid en bokning.
+function getMetaCached_() {
+  const cache = CacheService.getScriptCache();
+  const cached = cache.get('meta');
+  if (cached) return JSON.parse(cached);
+
+  const meta = {
+    available: getAvailable_(),
+    pricePerKg: getPrices_()
+  };
+  cache.put('meta', JSON.stringify(meta), 8); // cacha i 8 sekunder
+  return meta;
+}
+
+function invalidateMetaCache_() {
+  CacheService.getScriptCache().remove('meta');
+}
+
+function setAvailable_(val) {
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SETTINGS_SHEET);
+  sh.getRange(AVAILABLE_CELL).setValue(val);
+  invalidateMetaCache_();
+}
+
+function addRow_(sheet, values) {
+  // Snabb (O(1)) istället för att läsa hela kolumn A vid varje anrop.
+  const lastRow = sheet.getLastRow();
+  const nextRow = lastRow < 1 ? 2 : lastRow + 1;
+  sheet.getRange(nextRow, 1, 1, values[0].length).setValues(values);
+  return nextRow;
+}
+
+function sendPushover_(msg) {
+  const payload = {
+    token: PUSHOVER_TOKEN,
+    user: PUSHOVER_USER,
+    message: msg
+  };
+  UrlFetchApp.fetch("https://api.pushover.net/1/messages.json", {
+    method: "post",
+    payload: payload
+  });
+}
+
+function isEmailInNewsletter_(email) {
+  if (!email) return false;
+  const newsSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(NEWS_SHEET);
+  const data = newsSheet.getDataRange().getValues();
+  const lower = email.toLowerCase();
+  for (let i = 1; i < data.length; i++) {
+    const existingEmail = (data[i][1] || "").toString().toLowerCase().trim();
+    if (existingEmail === lower) return true;
+  }
+  return false;
+}
+
+function isAdmin_(uid, token) {
+  // Giltig session (från lösenords- eller Firebase-inloggning) räcker.
+  if (token && isValidSession_(token)) return true; 
+  if (!uid) return false;
+  
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(USERS_SHEET);
+  if (!sheet) return false;
+  
+  const data = sheet.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    // Kolla om UID matchar och kolumn E (index 4) är "Ja"
+    if (data[i][0] === uid && data[i][4] && data[i][4].toString().toLowerCase() === "ja") {
+      return true;
+    }
+  }
+  return false;
+}
+
+// ===== API ROUTER =====
+function doGet(e) {
+  // Returnerar alltid tillgänglighet och priser (cachat i 8 sek, se getMetaCached_)
+  return ContentService.createTextOutput(
+    JSON.stringify(getMetaCached_())
+  ).setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  let data = {};
+  try {
+    data = JSON.parse(e.postData.contents);
+  } catch(err) {
+    return ContentService.createTextOutput(JSON.stringify({ success: false, error: "Ogiltig JSON" }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  const action = data.action;
+
+  // ROUTING
+  switch (action) {
+    case "auth":
+      return jsonResponse_(handleAuth_(data));
+    case "book":
+      return jsonResponse_(handleBook_(data));
+    case "notify":
+      return jsonResponse_(handleNotify_(data));
+    
+    // ADMIN ACTIONS
+    case "getMeta":
+    case "updateMeta":
+    case "setSoldOut":
+      return jsonResponse_(handleAdmin_(data));
+    case "getDashboard":
+      // Kombinerar lager/pris + beställningar i ETT anrop (istället för två)
+      return jsonResponse_(handleDashboard_(data));
+    case "getOrders":
+    case "updateOrderStatus":
+      return jsonResponse_(handleOrders_(data));
+
+    // NYHETSBREV (ADMIN)
+    case "getSubscribers":
+    case "addSubscriber":
+    case "updateSubscriber":
+    case "deleteSubscriber":
+    case "sendNewsletter":
+    case "getNewsletterTemplate":
+      return jsonResponse_(handleNewsletter_(data));
+
+    // INLOGGNING (användarnamn + lösenord, hanteras i bladet "Användare")
+    case "login":
+      return jsonResponse_(handlePasswordLogin_(data));
+    case "logout":
+      invalidateSession_(data.token);
+      return jsonResponse_({ success: true });
+      
+    case "editOrder":
+
+    case "deleteOrder":
+      return jsonResponse_(handleEditDeleteOrder_(data));
+
+    default:
+      return jsonResponse_({ success: false, error: "Okänd action" });
+  }
+}
+
+function jsonResponse_(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ===== ACTION HANDLERS =====
+
+// 1. Autentisering & Användarhantering (Firebase-inloggning)
+function handleAuth_(data) {
+  const uid = data.uid;
+  if (!uid) return { success: false, error: "Inget UID" };
+
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(USERS_SHEET);
+  const rows = sheet.getDataRange().getValues();
+  
+  let userExists = false;
+  let isAdmin = false;
+
+  for (let i = 1; i < rows.length; i++) {
+    if (rows[i][0] === uid) {
+      userExists = true;
+      isAdmin = (rows[i][4] && rows[i][4].toString().toLowerCase() === "ja");
+      break;
+    }
+  }
+
+  // Spara ny användare om den inte finns
+  if (!userExists) {
+    addRow_(sheet, [[uid, data.email, data.name, new Date(), "Nej"]]);
+  }
+
+  // Hämta orderhistorik
+  const orderSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(BOOKINGS_SHEET);
+  const orderRows = orderSheet.getDataRange().getValues();
+  const orders = [];
+  
+  for (let i = 1; i < orderRows.length; i++) {
+    const r = orderRows[i];
+    if (r[8] === uid) { // UID sparas i kolumn I (index 8)
+      orders.push({
+        date: r[4] instanceof Date ? r[4].toLocaleDateString("sv-SE") : r[4],
+        amount: r[1],
+        type: r[2],
+        total: r[3],
+        status: r[7]
+      });
+    }
+  }
+
+  return { success: true, isAdmin, orders };
+}
+
+// 1b. Inloggning med användarnamn + lösenord (hanteras i bladet "Användare", kolumn F+G)
+function handlePasswordLogin_(data) {
+  const username = (data.username || "").toString().trim();
+  const password = (data.password || "").toString();
+  if (!username || !password) {
+    return { success: false, error: "Fyll i användarnamn och lösenord" };
+  }
+
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(USERS_SHEET);
+  if (!sheet) return { success: false, error: "Hittar inte bladet 'Användare'" };
+  const rows = sheet.getDataRange().getValues();
+
+  for (let i = 1; i < rows.length; i++) {
+    const rowUsername = (rows[i][5] || "").toString().trim(); // Kolumn F
+    if (!rowUsername || rowUsername !== username) continue;
+
+    const rowPassword = (rows[i][6] || "").toString(); // Kolumn G
+    if (rowPassword !== password) {
+      return { success: false, error: "Fel användarnamn eller lösenord" };
+    }
+    const isAdmin = (rows[i][4] && rows[i][4].toString().toLowerCase() === "ja");
+    if (!isAdmin) {
+      return { success: false, error: "Kontot saknar administratörsbehörighet" };
+    }
+    return { success: true, token: createSession_(username), name: rows[i][2] || username };
+  }
+
+  return { success: false, error: "Fel användarnamn eller lösenord" };
+}
+
+// 2. Bokning
+function handleBook_(data) {
+  const name = data.name || "";
+  const phone = data.phone || "";
+  const email = data.email || "";
+  const type = data.type || "levande";
+  const amountKg = parseFloat(data.amount) || 0;
+  const newsletter = !!data.newsletter;
+  const uid = data.uid || "";
+
+  if (!name || amountKg <= 0) return { success: false, error: "Ogiltig inmatning" };
+
+  const available = getAvailable_();
+  const prices = getPrices_();
+
+  if (amountKg > available) {
+    return { success: false, error: "NOT_ENOUGH_STOCK", available };
+  }
+
+  const pris = amountKg * (prices[type] || 0);
+
+  // Spara bokning (UID läggs till i kolumn I)
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(BOOKINGS_SHEET);
+  addRow_(sheet, [[name, amountKg, type, pris, new Date(), phone, email, "Ej levererad", uid]]);
+
+  // Skicka bekräftelse
+  const orderHtml = `
+    <h2>Hej ${name}!</h2>
+    <p>Tack för din bokning hos Olles Fiske!</p>
+    <p>Du har bokat <strong>${amountKg} kg ${type}</strong> kräftor.</p>
+    <p>Pris: <strong>${pris} kr</strong></p>
+    <p>Vi hör av oss gällande leverans.</p>
+    <p>Vänliga hälsningar,<br><strong>Olles Fiske</strong><br><a href="https://kopkraftor.se" target="_blank">kopkraftor.se</a></p>
+  `;
+
+  try {
+    GmailApp.sendEmail(email, `Bokningsbekräftelse – ${amountKg} kg ${type} kräftor`, '', {
+      from: "olle@kopkraftor.se", name: "Olles Fiske", htmlBody: orderHtml
+    });
+  } catch (err) {}
+
+  // Nyhetsbrev
+  let newsletterStatus = null;
+  if (newsletter && email) {
+    const exists = isEmailInNewsletter_(email);
+    if (!exists) {
+      const newsSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(NEWS_SHEET);
+      addRow_(newsSheet, [[name, email, phone, new Date()]]);
+      newsletterStatus = "added";
+    } else {
+      newsletterStatus = "exists";
+    }
+  }
+
+  setAvailable_(available - amountKg);
+
+  const nlText = newsletter ? (newsletterStatus === "added" ? "Ja (ny)" : "Ja (redan med)") : "Nej";
+  sendPushover_(`Ny beställning!\n${name} (${phone})\n${amountKg} kg ${type}\nPris: ${pris} kr\nNyhetsbrev: ${nlText}`);
+
+  return { success: true, pris, remaining: available - amountKg, newsletterStatus };
+}
+
+// 3. Bara meddela (Nyhetsbrev via "meddela mig när det finns kräftor igen")
+function handleNotify_(data) {
+  const { name, phone, email } = data;
+  const newsSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(NEWS_SHEET);
+  
+  if (isEmailInNewsletter_(email)) {
+    sendPushover_(`${name} (${email})\nFörsökte anmäla sig, men finns redan i nyhetslistan.`);
+    return { success: true, newsletter: true, newsletterStatus: "exists" };
+  } else {
+    addRow_(newsSheet, [[name, email, phone, new Date()]]);
+    sendPushover_(`Ny Epost i nyhetslistan!\n${name} (${email})\n${phone}`);
+    return { success: true, newsletter: true, newsletterStatus: "added" };
+  }
+}
+
+// 4. Admin hantering av Meta
+function handleAdmin_(data) {
+  if (!isAdmin_(data.uid, data.token)) return { success: false, error: "Behörighet saknas" };
+
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SETTINGS_SHEET);
+
+  if (data.action === "updateMeta") {
+    if (typeof data.available === "number") sh.getRange(AVAILABLE_CELL).setValue(data.available);
+    if (typeof data.priceKokta === "number") sh.getRange(PRICE_KOKTA_CELL).setValue(data.priceKokta);
+    if (typeof data.priceLevande === "number") sh.getRange(PRICE_LEVANDE_CELL).setValue(data.priceLevande);
+    invalidateMetaCache_();
+  } else if (data.action === "setSoldOut") {
+    sh.getRange(AVAILABLE_CELL).setValue(0);
+    invalidateMetaCache_();
+  }
+
+  return { success: true, available: getAvailable_(), prices: getPrices_() };
+}
+
+// 4b. Kombinerat dashboard-anrop: lager+pris OCH beställningar i ETT svar
+// (ersätter två separata anrop - getMeta + getOrders - från adminpanelens polling)
+function handleDashboard_(data) {
+  if (!isAdmin_(data.uid, data.token)) return { success: false, error: "Behörighet saknas" };
+
+  const available = getAvailable_();
+  const prices = getPrices_();
+
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(BOOKINGS_SHEET);
+  const rows = sh ? sh.getDataRange().getValues() : [];
+  const orders = [];
+  for (let i = 1; i < rows.length; i++) {
+    const r = rows[i];
+    if (!r[0]) continue;
+    orders.push({
+      id: i + 1,
+      name: r[0],
+      kg: r[1],
+      type: r[2],
+      total: r[3],
+      timestamp: r[4] instanceof Date ? r[4].toLocaleString("sv-SE") : r[4],
+      phone: r[5],
+      email: r[6],
+      delivered: ((r[7] || "").toString().toLowerCase() === "levererad")
+    });
+  }
+
+  return { success: true, available, prices, orders };
+}
+
+// 5. Admin hantering av beställningar
+function handleOrders_(data) {
+  if (!isAdmin_(data.uid, data.token)) return { success: false, error: "Behörighet saknas" };
+
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(BOOKINGS_SHEET);
+  if (!sh) return { success: false, error: "Hittar inte beställningsbladet" };
+
+  if (data.action === "getOrders") {
+    const rows = sh.getDataRange().getValues();
+    const orders = [];
+    for (let i = 1; i < rows.length; i++) {
+      const r = rows[i];
+      if (!r[0]) continue;
+      orders.push({
+        id: i + 1,
+        name: r[0],
+        kg: r[1],
+        type: r[2],
+        total: r[3],
+        timestamp: r[4] instanceof Date ? r[4].toLocaleString("sv-SE") : r[4],
+        phone: r[5],
+        email: r[6],
+        delivered: ((r[7] || "").toString().toLowerCase() === "levererad")
+      });
+    }
+    return { success: true, orders };
+  }
+
+  if (data.action === "updateOrderStatus") {
+    const row = Number(data.id);
+    if (!row || row < 2) return { success: false, error: "Ogiltig rad" };
+    sh.getRange(row, 8).setValue(data.delivered ? "Levererad" : "Ej levererad");
+    return { success: true };
+  }
+}
+
+// 6. Nyhetsbrev: prenumeranter + utskick
+function getSubscribersRows_() {
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(NEWS_SHEET);
+  if (!sh) return [];
+  const rows = sh.getDataRange().getValues();
+  const list = [];
+  for (let i = 1; i < rows.length; i++) {
+    const r = rows[i];
+    if (!r[1]) continue; // kräver e-post
+    list.push({
+      id: i + 1,
+      name: r[0] || "",
+      email: r[1] || "",
+      phone: r[2] || "",
+      added: r[3] instanceof Date ? r[3].toLocaleDateString("sv-SE") : (r[3] || "")
+    });
+  }
+  return list;
+}
+
+function handleNewsletter_(data) {
+  if (!isAdmin_(data.uid, data.token)) return { success: false, error: "Behörighet saknas" };
+
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(NEWS_SHEET);
+  if (!sh) return { success: false, error: "Hittar inte bladet 'Nyhetslista'" };
+
+  switch (data.action) {
+    case "getSubscribers":
+      return { success: true, subscribers: getSubscribersRows_() };
+
+    case "getNewsletterTemplate":
+      return { success: true, subject: DEFAULT_NEWSLETTER_SUBJECT, body: DEFAULT_NEWSLETTER_BODY };
+
+    case "addSubscriber": {
+      const email = (data.email || "").toString().trim();
+      if (!email || email.indexOf("@") === -1) return { success: false, error: "Ogiltig e-postadress" };
+      if (isEmailInNewsletter_(email)) return { success: false, error: "E-posten finns redan i listan" };
+      addRow_(sh, [[data.name || "", email, data.phone || "", new Date()]]);
+      return { success: true };
+    }
+
+    case "updateSubscriber": {
+      const row = Number(data.id);
+      if (!row || row < 2) return { success: false, error: "Ogiltig rad" };
+      if (data.name !== undefined) sh.getRange(row, 1).setValue(data.name);
+      if (data.email !== undefined) sh.getRange(row, 2).setValue(data.email);
+      if (data.phone !== undefined) sh.getRange(row, 3).setValue(data.phone);
+      return { success: true };
+    }
+
+    case "deleteSubscriber": {
+      const row = Number(data.id);
+      if (!row || row < 2) return { success: false, error: "Ogiltig rad" };
+      sh.deleteRow(row);
+      return { success: true };
+    }
+
+    case "sendNewsletter":
+      return sendNewsletter_(data);
+
+    default:
+      return { success: false, error: "Okänd nyhetsbrevsåtgärd" };
+  }
+}
+
+function sendNewsletter_(data) {
+  const subject = (data.subject || "").toString().trim();
+  const bodyText = (data.body || "").toString().trim();
+  if (!subject || !bodyText) return { success: false, error: "Ämne och meddelande krävs" };
+
+  const all = getSubscribersRows_();
+  let targets = all;
+  if (Array.isArray(data.recipientIds) && data.recipientIds.length > 0) {
+    const idSet = new Set(data.recipientIds.map(Number));
+    targets = all.filter(s => idSet.has(s.id));
+  }
+  targets = targets.filter(s => s.email);
+
+  if (targets.length === 0) return { success: false, error: "Inga mottagare valda" };
+
+  // GmailApp/MailApp delar samma dagskvot - kolla innan vi börjar skicka
+  const quota = MailApp.getRemainingDailyQuota();
+  const sendable = targets.slice(0, quota);
+  const skippedDueToQuota = Math.max(0, targets.length - quota);
+
+  let sent = 0, failed = 0;
+  sendable.forEach(sub => {
+    try {
+      const htmlBody = `
+        <p>Hej ${sub.name || ""}!</p>
+        <div>${bodyText.replace(/\n/g, "<br>")}</div>
+        <p style="margin-top:20px;">Vänliga hälsningar,<br><strong>Olles Fiske</strong><br>
+        <a href="https://kopkraftor.se" target="_blank">kopkraftor.se</a></p>
+      `;
+      GmailApp.sendEmail(sub.email, subject, bodyText, {
+        from: "olle@kopkraftor.se",
+        name: "Olles Fiske",
+        htmlBody
+      });
+      sent++;
+    } catch (err) {
+      failed++;
+    }
+  });
+
+  return {
+    success: true,
+    sent,
+    failed,
+    totalRequested: targets.length,
+    skippedDueToQuota
+  };
+}
+
+// 7. Sessionshantering (används av både lösenordsinloggning och som
+//    bakåtkompatibel token-väg för isAdmin_)
+function createSession_(username) {
+  const token = Utilities.getUuid();
+  let sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("ActiveSessions");
+  if (!sh) {
+    sh = SpreadsheetApp.getActiveSpreadsheet().insertSheet("ActiveSessions");
+    sh.appendRow(["Token", "User", "Created"]);
+  }
+  sh.appendRow([token, username, new Date()]);
+  return token;
+}
+
+function isValidSession_(token) {
+  if (!token) return false;
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("ActiveSessions");
+  if (!sh) return false;
+  const data = sh.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][0] === token) return true;
+  }
+  return false;
+}
+
+function invalidateSession_(token) {
+  if (!token) return;
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("ActiveSessions");
+  if (!sh) return;
+  const data = sh.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][0] === token) {
+      sh.deleteRow(i + 1);
+      return;
+    }
+  }
+}
+
+// 8. Redigera/ta bort beställning
+function handleEditDeleteOrder_(data) {
+  if (!isAdmin_(data.uid, data.token)) return { success: false, error: "Behörighet saknas" };
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(BOOKINGS_SHEET);
+  if (!sh) return { success: false, error: "Hittar inte beställningsbladet" };
+
+  const row = Number(data.id);
+  if (!row || row < 2) return { success: false, error: "Ogiltig rad" };
+
+  if (data.action === "deleteOrder") {
+    sh.deleteRow(row);
+    return { success: true };
+  }
+
+  if (data.action === "editOrder") {
+    if (data.name !== undefined) sh.getRange(row, 1).setValue(data.name);
+    // Kolumn 2 är Kg, Kolumn 3 är Typ, Kolumn 4 är Summa
+    if (data.kg !== undefined) sh.getRange(row, 2).setValue(data.kg);
+    if (data.type !== undefined) sh.getRange(row, 3).setValue(data.type);
+    if (data.total !== undefined) sh.getRange(row, 4).setValue(data.total);
+    return { success: true };
+  }
+}
