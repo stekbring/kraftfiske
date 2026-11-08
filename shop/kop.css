@@ -1,0 +1,196 @@
+    body {
+      margin: 0;
+      font-family: 'Times New Roman', Times, Helvetica, sans-serif, serif;
+      background: #891212;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    .container{touch-action: manipulation;}
+
+    header {
+      display: flex;
+      align-items: center;
+      background: #680c0c;
+      color: white;
+      padding: 10px 20px;
+    }
+
+    header img { 
+      height: 50px; 
+      margin-right: 20px; 
+      margin-top: 10px;
+      margin-bottom: 10px;
+    }
+    header h1 { 
+      font-size: 24px; 
+      margin: 0; 
+    }
+
+    nav { margin-left: auto; }
+    nav a {
+      color: white; text-decoration: none; margin: 0 10px; font-weight: bold; cursor: pointer;
+    }
+    nav a.active { text-decoration: underline; }
+
+    main.content {
+      flex: 1;
+      width: 85%;
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      min-height: calc(100vh - 320px);
+    }
+    .kg-control {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 10px;
+    }
+
+    .kg-control button {
+      background: #891212;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 20px;
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+    }
+
+    .kg-display {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+      min-width: 80px;
+      justify-content: center; 
+      margin-top: 15px;
+    }
+
+    .kg-display span {
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .newsletter-label {
+      font-size: 15px;
+      color: #444;
+    }
+
+    .newsletter-label input {
+        vertical-align: middle;
+        transform: scale(1.1);
+        margin-right: 6px;
+        margin-top: 3px;
+      }
+
+    footer {
+      text-align: center;
+      padding: 60px 20px 20px;
+      background: #680c0c;
+      color: white;
+      margin-top: 40px;
+    }
+
+    .footer-bg { background: #680c0c; height: 200px; }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    form label { display: block; margin-top: 10px; }
+
+    form input, form select {
+      width: 100%; 
+      padding: 8px; 
+      margin-top: 5px;
+      border: 1px solid #ccc; 
+      border-radius: 5px;
+      box-sizing: border-box;
+    }
+    
+    form button {
+      margin-top: 15px; padding: 10px; width: 100%;
+      background: #891212; color: white; border: none; border-radius: 5px;
+      font-size: 16px;
+    }
+    .quick { display: flex; gap: 10px; margin-top: 5px; }
+    .quick button { flex: 1; background: #444; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    .info { margin-top: 25px; font-weight: bold; }
+    #result { margin-top: 15px; font-weight: bold; }
+
+    .popup {
+      display: none; position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      justify-content: center; align-items: center;
+      z-index: 1000;
+    }
+    .popup-content {
+      background: white; padding: 20px; border-radius: 8px;
+      max-width: 400px; width: 90%; text-align: center;
+    }
+    .popup-content h3 { margin-top: 0; }
+    .popup button {
+      margin-top: 15px; padding: 10px 20px;
+      background: #680c0c; color: white; border: none; border-radius: 5px;
+      cursor: pointer;
+    }
+    
+    form label input[type="checkbox"] {
+      width: auto; margin-right: 8px;
+    }
+
+    .info-label {
+      font-size: 13px;
+      color: #555;
+      margin-left: 10px;
+      font-weight: normal;
+    }
+
+    @media (max-width: 600px) {
+      header { flex-direction: column; align-items: center; text-align: center; }
+      header img { height: 110px; margin: 0; margin-top: 30px; }
+      header h1 { font-size: 30px; margin-bottom: 40px; margin-top: 40px; }
+      nav { margin: 10px 0 0 0; }
+      nav a { display: inline-block; margin: 5px; font-size: 16px; }
+
+      .content {
+        width: 85%; max-width: 1200px; margin: 20px auto;
+        padding: 20px; background: white; border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        min-height: calc(100vh - 200px);
+      }
+
+      .newsletter-label { font-size: 13px; color: #444; }
+
+      .newsletter-label input {
+        vertical-align: middle;
+        transform: scale(1.1);
+        margin-right: 5px;
+        margin-top: 3px;
+      }
+
+      main.content {
+        flex: 1;
+        width: 85%;
+        max-width: 800px;
+        margin: 20px auto;
+        padding: 20px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      }
+
+      .quick { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+      .quick button { font-size: 14px; padding: 10px; }
+
+      footer { font-size: 14px; padding: 50px 20px 20px; }
+      .footer-bg { height: 100px; }
+
+      .popup-content { width: 90%; max-height: 80%; overflow-y: auto; }
+    }

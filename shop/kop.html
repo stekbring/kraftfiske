@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-MJWDG3R1ZK"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-MJWDG3R1ZK');
+</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Olles Fiske</title>
+  <link rel="icon" type="image/png" href="loggasimpelvit.ico">
+  
+  <link rel="stylesheet" href="kop.css">
+</head>
+<body>
+  <header>
+    <img src="loggasimpelvit2.png" alt="Olles Fishing Company" width="150" height="50">
+    <h1>Olles Fiske</h1>
+    <nav>
+      <a onclick="showTab(event, 'boka')" class="active">Köp</a>
+      <a onclick="showTab(event, 'om')">Om oss</a>
+      <a onclick="showTab(event, 'info')">Info kräftor</a>
+    </nav>
+  </header>
+
+  <main class="content">
+    <section id="boka" class="tab-content active">
+      <h2>Köp kräftor</h2>
+      <p><b>Tillgängliga kräftor:</b> <span id="available">....</span> kg <span class="info-label">(1 kg är ca 20 kräftor)</span></p>
+      <p id="priceInfo"><b>Pris per kg:</b> Kokta: <span id="priceKokta">....</span> kr, Levande: <span id="priceLevande">....</span> kr</p>
+
+      <form id="bookingForm">
+        <label>Namn</label>
+        <input type="text" id="name" required>
+
+        <label>Telefonnummer</label>
+        <input type="text" id="phone">
+
+        <label>Email</label>
+        <input type="email" id="email" placeholder="Valfritt">
+
+        <label class="newsletter-label"><input type="checkbox" id="newsletter">Jag vill få ett mail när nya kräftor finns tillgängliga</label>
+
+        <div class="kg-control">
+          <button type="button" onclick="changeKg(-0.5)">−</button>
+          <div class="kg-display">
+            <span id="kgDisplay">0.0</span>
+            <span>kg</span>
+          </div>
+          <button type="button" onclick="changeKg(0.5)">+</button>
+        </div>
+
+        <input type="hidden" id="amount" value="0">
+        <label>Typ</label>
+        <select id="type">
+          <option value="kokta">Kokta</option>
+          <option value="levande">Levande</option>
+        </select>
+
+        <p class="info">Totalsumma: <span id="total">0</span> kr</p>
+        <button type="submit">Boka</button>
+        <!-- extra submit used only when sold out (visas istället för "Boka") -->
+        <button type="submit" id="notifyBtn" style="display:none">Meddela mig</button>
+      </form>
+
+      <p id="result"></p>
+    </section>
+
+    <section id="om" class="tab-content">
+      <h2>Om oss</h2>
+      <p>Vi har fiskat kräftor i generationer...</p>
+    </section>
+
+    <section id="info" class="tab-content">
+      <h2>Info om kräftor</h2>
+      <p><strong>Här kan du läsa mer om våra kräftor, skötselråd och tips inför kräftskivan.</strong><br><br><br>Just nu fiskar vi enbart <strong>signalkräftor</strong>, men i framtiden vill vi även börja erbjuda <strong>flodkräftor</strong>.<br><br>Allt fiske sker helt <strong>lagligt</strong> och i enlighet med gällande regler.<br>Samtliga kräftor vi säljer är noggrant kontrollerade och håller sig inom de rekommenderade <strong>standardmåtten</strong>.</p>
+    </section>
+  </main>
+
+  <footer>
+    <span>Kontakta oss gärna vid några funderingar på <a href="mailto:olle@kopkraftor.se" style="color: #ffffff;">olle@kopkraftor.se</a></span>
+    <br><br><br>&copy; <span id="year"></span>   Olles Fiske
+  </footer>
+  <div class="footer-bg"></div>
+
+  <div id="popup" class="popup">
+    <div class="popup-content">
+      <h3>Bokning klar!</h3>
+      <p id="popupText"></p>
+      <button onclick="closePopup()">Stäng</button>
+    </div>
+  </div>
+
+  <script src="kop.js"></script>
+</body>
+</html>

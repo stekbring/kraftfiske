@@ -1,0 +1,262 @@
+    /* --- färger och typografi matchar din hemsida --- */
+    :root{
+      --bg: #891212;
+      --header: #680c0c;
+      --card: #ffffff;
+      --muted: #555;
+      --accent: #891212;
+      --radius: 10px;
+      --max-width: 1100px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family: 'Times New Roman', Times, Helvetica, sans-serif, serif; background:var(--bg); color:#111; min-height:100vh; display:flex; flex-direction:column;
+    }
+    header{background:var(--header); color:white; padding:14px 18px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;}
+    header img{height:30px}
+    header h1{font-size:20px;margin:0}
+
+    /* Navigering mellan Översikt / Nyhetsbrev */
+    .admin-nav { margin-left: auto; display:flex; gap:16px; align-items:center; }
+    .admin-nav a {
+      color:white; text-decoration:none; font-weight:bold; cursor:pointer;
+      padding:4px 2px; border-bottom:2px solid transparent; font-size:14px;
+    }
+    .admin-nav a.active { border-bottom-color:#fff; }
+
+    /* Utloggningsknapp i headern */
+    .logout-btn {
+      background: #444;
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 5px;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .wrap{width:95%; max-width:var(--max-width); margin:18px auto 80px;}
+
+    .admin-tab { display:none; }
+    .admin-tab.active { display:block; }
+
+    /* Ändrat till en enda kolumn som fyller hela bredden */
+    .grid{display:grid; grid-template-columns: 1fr; gap:18px;}
+    .stack{display:flex; flex-direction:column; gap:18px;}
+    
+    .card{background:var(--card); border-radius:var(--radius); padding:16px; box-shadow:0 6px 20px rgba(0,0,0,0.12); margin-bottom:18px;}
+    .card:last-child{margin-bottom:0;}
+
+    /* Dashboard top */
+    .stats{display:flex; gap:12px; align-items:stretch}
+    .stat{flex:1; padding:12px; border-radius:8px; background:#fff7f7; display:flex; flex-direction:column; justify-content:center;}
+    .stat h3{margin:0;font-size:14px;color:var(--muted)}
+    .stat p{margin:6px 0 0; font-size:20px; font-weight:bold}
+
+    /* form styles */
+    label{display:block; margin-top:8px; font-size:13px}
+    input[type="text"], input[type="password"], input[type="number"], input[type="email"], textarea, select{font-size: 16px; width:100%; padding:8px; margin-top:6px; border:1px solid #ddd; border-radius:6px; font-family:inherit;}
+    textarea{resize:vertical;}
+    button{background:var(--accent); color:white; border:0; padding:10px 12px; border-radius:8px; cursor:pointer}
+    button:disabled{opacity:0.6; cursor:default;}
+
+    /* orders table */
+    table{width:100%; border-collapse:collapse; font-size:13px}
+    th, td{padding:8px; border-bottom:1px solid #eee; text-align:left}
+    th{background:#fafafa}
+    .small{font-size:12px;color:var(--muted)}
+
+    .meta-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    .meta-item {
+      flex: 1;
+      min-width: 110px;
+    }
+    .meta-item label {
+      font-size: 13px;
+    }
+    .meta-item input {
+      width: 100%;
+    }
+
+    .status-btn {
+      padding: 4px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      border: none;
+      font-size: 12px;
+      color: #fff;
+    }
+    .status-btn.green {
+      background: #28a745;
+    }
+    .status-btn.red {
+      background: #d33;
+    }
+    .status-btn:hover {
+      opacity: 0.8;
+    }
+    .card {
+      overflow-x: auto;
+      overflow: visible;
+      width: 100%;
+    }
+
+    #ordersTable, #subscribersTable {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: auto;
+      min-width: unset;
+    }
+    th.sortable::after {
+      content: " ";
+      margin-left: 6px;
+      font-size: 10px;
+    }
+    th.sortable.asc::after { content: "▲"; }
+    th.sortable.desc::after { content: "▼"; }
+
+    .order-menu-container {
+      position: absolute;
+      top: 50%;
+      right: 6px;
+      transform: translateY(-50%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .order-menu-btn {
+      background: none;
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+      padding: 0 4px;
+      color: #333;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    td {
+      position: relative;
+    }
+
+    /* Lyfter raden så menyn inte hamnar bakom texten nedanför */
+    td.active-menu {
+      z-index: 9999 !important;
+    }
+    
+    .order-menu-dropdown {
+      display: none;
+      position: absolute;
+      top: 24px;
+      right: 0;
+      background: #fff;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+      border-radius: 6px;
+      z-index: 9999;
+      min-width: 120px;
+    }
+    .order-menu-dropdown button {
+      width: 100%;
+      padding: 8px 12px;
+      border: none;
+      background: none;
+      text-align: left;
+      cursor: pointer;
+      color: #333;
+      font-size: 13px;
+    }
+    .order-menu-dropdown button:hover {
+      background: #f2f2f2;
+    }
+    
+    /* Gjorde inmatningsfälten bredare och snyggare i redigeringsläget */
+    input.inline-edit {
+      width: 100%;
+      min-width: 70px;
+      box-sizing: border-box;
+      padding: 6px 4px;
+      font-size: 13px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    /* Stilar för Spara / Avbryt knappar i redigeringsläge */
+    .edit-actions {
+      position: absolute;
+      right: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      gap: 6px;
+      background: #fff;
+      padding: 4px;
+    }
+    .edit-actions button {
+      padding: 6px 10px;
+      font-size: 12px;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      color: white;
+    }
+    .btn-save { background: #28a745; }
+    .btn-cancel { background: #6c757d; }
+    .edit-actions button:hover { opacity: 0.8; }
+
+    /* Prenumerant-tabell (nyhetsbrev) */
+    #subscribersTable th:first-child, #subscribersTable td:first-child { width:30px; text-align:center; }
+    .sub-actions-view button, .sub-actions-edit button {
+      padding:5px 10px; font-size:12px; border-radius:6px; margin-right:4px; color:#fff; border:none; cursor:pointer;
+    }
+    .edit-sub-btn { background:#444; }
+    .delete-sub-btn { background:#d33; }
+    .sub-check { width:16px; height:16px; }
+
+    .google-btn {
+      background: #4285F4 !important;
+      color: white !important;
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    @media (max-width: 600px) {
+      .meta-row { flex-direction: column; }
+      .wrap { width: 100%; }
+      table { font-size: 12px; }
+      th, td { padding: 6px; }
+    }
+    @media (max-width:900px){
+      header{
+        flex-direction:column; 
+        align-items: center;
+        text-align: center;
+      }
+      header h1 { margin-top: 8px; }
+      .admin-nav { margin-left: 0; margin-top: 6px; }
+      .logout-btn { margin-top: 10px; }
+    }
+    @media (max-width:480px){
+      header img{height:48px}
+      header h1{font-size:18px}
+      .stat p { font-size: 16px; }
+      .stat h3 { font-size: 12px; }
+      .order-menu-container { right: -10px; }
+      .order-menu-btn { font-size: 20px; }
+    }
+    .muted{color:var(--muted)}
